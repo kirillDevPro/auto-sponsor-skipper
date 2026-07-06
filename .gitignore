@@ -1,0 +1,8 @@
+node_modules/
+*.zip
+*.bundle
+*.pem
+*.log
+
+# Local Chrome Web Store listing helper - not part of the extension; never committed.
+store-listing-fields.txt

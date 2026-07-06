@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Auto Sponsor Skipper — Privacy Policy</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --primary: #60A5FA;
+    --bg: #161618;
+    --surface: #1E1E21;
+    --card: #252528;
+    --on-surface: #ECECEF;
+    --muted: #A8A8B0;
+    --outline: #414145;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px 16px 64px;
+    background: var(--bg);
+    color: var(--on-surface);
+    font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    line-height: 1.6;
+  }
+  main {
+    max-width: 760px;
+    margin: 0 auto;
+    background: var(--surface);
+    border: 1px solid var(--outline);
+    border-radius: 16px;
+    padding: 32px 36px;
+  }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.15rem; margin: 32px 0 8px; color: var(--primary); }
+  a { color: var(--primary); }
+  .updated { color: var(--muted); font-size: 0.9rem; margin: 0 0 16px; }
+  .lead { color: var(--muted); }
+  code { background: var(--card); padding: 1px 6px; border-radius: 6px; font-size: 0.9em; }
+  .note { background: var(--card); border-left: 3px solid var(--primary); padding: 12px 16px; border-radius: 8px; margin: 16px 0; }
+  footer { max-width: 760px; margin: 24px auto 0; color: var(--muted); font-size: 0.85rem; text-align: center; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Auto Sponsor Skipper — Privacy Policy</h1>
+  <p class="updated">Last updated: 6 July 2026</p>
+  <p class="lead">Auto Sponsor Skipper is a Chrome extension that automatically skips community-submitted segments on YouTube. It is built to need as little of your data as possible. This page explains exactly what it does and does not do with data.</p>
+
+  <h2>The short version</h2>
+  <ul>
+    <li>No accounts, no sign-up, no analytics, no tracking, no advertising.</li>
+    <li>We operate <strong>no servers</strong> of our own and <strong>never sell or share</strong> your data.</li>
+    <li>The only thing ever sent off your device is a <strong>4-character hashed prefix</strong> of the video ID, sent to SponsorBlock to look up skip segments.</li>
+  </ul>
+
+  <h2>What is sent to SponsorBlock</h2>
+  <p>To find skip segments for the video you are watching, the extension computes a SHA-256 hash of the YouTube video ID and sends only the <strong>first 4 hexadecimal characters</strong> of that hash to the SponsorBlock API at <code>https://sponsor.ajay.app</code> over HTTPS. It receives candidate segments for many videos and filters them locally.</p>
+  <div class="note">The full video ID <strong>never leaves your browser</strong>. A 4-character prefix is <em>k-anonymous</em>: it matches thousands of different videos (about 1 in 65,536 of the hash space), so SponsorBlock cannot determine which video you are watching. No user identifier, cookie, or account is attached to the request.</div>
+
+  <h2>What is stored, and where</h2>
+  <ul>
+    <li><strong>Settings</strong> (which categories to skip, minimum segment length) are stored in <code>chrome.storage.sync</code>. If you have Chrome Sync enabled, Chrome syncs them across your signed-in browsers; otherwise they stay on this device. This is handled by Chrome, not by us.</li>
+    <li><strong>The segment cache, statistics, and the channel whitelist</strong> are stored in <code>chrome.storage.local</code> and <strong>stay on this device only</strong> — they are never transmitted.</li>
+  </ul>
+
+  <h2>Data retention and deletion</h2>
+  <ul>
+    <li>Cached segments expire automatically (about 7 days for found segments, 12 hours when a video has none, 30 seconds after a lookup error) and the cache is capped in size, oldest entries pruned first.</li>
+    <li>You can reset the statistics at any time from the extension's options page, and remove any channel from the whitelist there.</li>
+    <li><strong>Uninstalling the extension</strong> removes all of its local data from your browser.</li>
+  </ul>
+
+  <h2>Third parties</h2>
+  <p>The extension contacts exactly one third-party service: the <a href="https://sponsor.ajay.app">SponsorBlock</a> API, and only to fetch skip-segment data as described above. No other network requests are made. No data is sold or shared with anyone.</p>
+
+  <h2>Google API Limited Use</h2>
+  <p>The use of information received from Google APIs will adhere to the <a href="https://developer.chrome.com/docs/webstore/program-policies/limited-use">Chrome Web Store User Data Policy</a>, including the Limited Use requirements.</p>
+
+  <h2>Contact</h2>
+  <p>Questions or concerns? Please open an issue at <a href="https://github.com/kirillDevPro/auto-sponsor-skipper">github.com/kirillDevPro/auto-sponsor-skipper</a>.</p>
+
+  <h2>Attribution</h2>
+  <p>Segment data by <strong>SponsorBlock</strong> (<a href="https://sponsor.ajay.app">sponsor.ajay.app</a>), licensed CC BY-NC-SA 4.0. This is a free, non-commercial, read-only client and is <strong>not affiliated with, endorsed by, or created by SponsorBlock or YouTube / Google</strong>.</p>
+</main>
+<footer>Auto Sponsor Skipper · Source-available under PolyForm Noncommercial 1.0.0</footer>
+</body>
+</html>

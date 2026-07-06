@@ -1,0 +1,364 @@
+/* ============================================
+   SETTINGS STYLES - MATERIAL DESIGN 3 (dark only)
+   Shared visual language with "Pages Auto Updater":
+   one fixed dark palette, blue primary, pill buttons,
+   an elevated container card with bordered section headings.
+   ============================================ */
+
+:root {
+  color-scheme: dark;
+
+  /* Primary */
+  --md-sys-color-primary: #60A5FA;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #2563EB;
+  --md-sys-color-on-primary-container: #DBEAFE;
+
+  /* Surface */
+  --md-sys-color-surface: #1E1E21;
+  --md-sys-color-surface-container-lowest: #161618;
+  --md-sys-color-surface-container-low: #252528;
+  --md-sys-color-surface-container: #2D2D31;
+  --md-sys-color-surface-container-high: #363639;
+  --md-sys-color-surface-container-highest: #414145;
+  --md-sys-color-on-surface: #ECECEF;
+  --md-sys-color-on-surface-variant: #A8A8B0;
+
+  /* Outline */
+  --md-sys-color-outline: #6B6B75;
+  --md-sys-color-outline-variant: #505058;
+
+  /* Semantic */
+  --md-sys-color-error: #EF4444;
+  --md-sys-color-on-error: #FFFFFF;
+
+  /* Elevation shadows */
+  --md-sys-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-3: 0 10px 15px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(0, 0, 0, 0.3);
+
+  /* Motion */
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-duration-short: 150ms;
+
+  /* Shape */
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-large: 16px;
+  --md-sys-shape-corner-extra-large: 28px;
+  --md-sys-shape-corner-full: 100px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  padding: 32px 16px 64px;
+  font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* === CONTAINER CARD === */
+main {
+  max-width: 720px;
+  margin: 0 auto;
+  background-color: var(--md-sys-color-surface-container-low);
+  border-radius: var(--md-sys-shape-corner-extra-large);
+  box-shadow: var(--md-sys-elevation-3);
+  overflow: hidden;
+  padding: 0;
+}
+
+h1 {
+  font-size: 1.75rem;
+  font-weight: 400;
+  text-align: center;
+  margin: 0;
+  padding: 28px 32px 12px;
+  color: var(--md-sys-color-on-surface);
+  letter-spacing: -0.01em;
+}
+
+/* === SECTIONS === */
+section {
+  padding: 12px 32px 24px;
+  margin: 0;
+}
+
+section:last-child {
+  padding-bottom: 32px;
+}
+
+section h2 {
+  font-size: 1.25rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface);
+  margin: 0 0 20px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--md-sys-color-outline-variant);
+}
+
+/* === LABELS & HINTS === */
+label.block {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+}
+
+.hint {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8125rem;
+  margin: 2px 0 8px;
+  line-height: 1.4;
+}
+
+/* === ENABLE ROW (checkbox card) === */
+.field {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  transition: background-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard),
+              border-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+.field:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+  border-color: var(--md-sys-color-outline);
+}
+
+.field label.block {
+  flex: 1;
+  margin-bottom: 0;
+  cursor: pointer;
+}
+
+/* === INPUTS (MD3 outlined, filled surface in dark) === */
+input[type="number"],
+input[type="text"] {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  padding: 12px 14px;
+  transition: border-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+input[type="number"]:hover,
+input[type="text"]:hover {
+  border-color: var(--md-sys-color-on-surface);
+}
+
+input[type="number"]:focus,
+input[type="text"]:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  border-width: 2px;
+  padding: 11px 13px;
+}
+
+input[type="number"] {
+  width: 120px;
+  text-align: center;
+}
+
+input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--md-sys-color-primary);
+  cursor: pointer;
+}
+
+/* === CATEGORIES CARD === */
+#categories {
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  padding: 6px 16px;
+}
+
+.cat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.cat label {
+  flex: 1;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+}
+
+/* === MD3 BUTTONS === */
+button {
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: none;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-primary);
+  color: var(--md-sys-color-on-primary);
+  padding: 12px 24px;
+  cursor: pointer;
+  box-shadow: var(--md-sys-elevation-1);
+  transition: box-shadow var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard),
+              transform var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+  position: relative;
+  overflow: hidden;
+}
+
+button::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-color: #FFFFFF;
+  opacity: 0;
+  transition: opacity var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+button:hover { box-shadow: var(--md-sys-elevation-2); }
+button:hover::before { opacity: 0.08; }
+button:active { transform: scale(0.98); box-shadow: var(--md-sys-elevation-1); }
+button:active::before { opacity: 0.12; }
+
+/* Tonal / secondary button */
+button.secondary {
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  box-shadow: none;
+}
+
+button.secondary::before { display: none; }
+button.secondary:hover {
+  background-color: var(--md-sys-color-surface-container-highest);
+  box-shadow: none;
+}
+
+/* === WHITELIST === */
+.wl-add {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.wl-add input { flex: 1; }
+
+ul.wl {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+ul.wl li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 16px;
+  margin-bottom: 8px;
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+}
+
+ul.wl li:last-child { margin-bottom: 0; }
+
+ul.wl li span {
+  font-family: 'Roboto Mono', ui-monospace, 'SF Mono', Consolas, monospace;
+  font-size: 0.875rem;
+  color: var(--md-sys-color-on-surface);
+  word-break: break-all;
+}
+
+ul.wl li span.empty {
+  font-family: inherit;
+  color: var(--md-sys-color-on-surface-variant);
+  font-style: italic;
+}
+
+ul.wl li button.secondary {
+  padding: 8px 16px;
+  font-size: 0.8125rem;
+  flex-shrink: 0;
+}
+
+/* === STATISTICS (stat cards) === */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.stat {
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-large);
+  padding: 24px;
+  text-align: center;
+  box-shadow: var(--md-sys-elevation-1);
+}
+
+.stat .num {
+  font-size: 2rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  line-height: 1.2;
+  margin-bottom: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat .lbl {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
+.saved {
+  color: var(--md-sys-color-primary);
+  font-size: 0.8125rem;
+  margin-left: 8px;
+  opacity: 0;
+  transition: opacity 0.2s var(--md-sys-motion-easing-standard);
+}
+
+.saved.show { opacity: 1; }
+
+/* === ABOUT === */
+.about {
+  margin-top: 4px;
+  padding: 16px;
+  background-color: var(--md-sys-color-surface-container);
+  border-left: 4px solid var(--md-sys-color-primary);
+  border-radius: var(--md-sys-shape-corner-medium);
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.8125rem;
+  line-height: 1.6;
+}
+
+.about p { margin: 0 0 8px; }
+.about p:last-child { margin-bottom: 0; }
+
+.about a {
+  color: var(--md-sys-color-primary);
+  text-decoration: none;
+}
+
+.about a:hover { text-decoration: underline; }

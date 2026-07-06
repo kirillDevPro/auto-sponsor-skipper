@@ -1,0 +1,21 @@
+# Normalize line endings: store text files with LF in the repository,
+# regardless of the contributor's OS.
+* text=auto eol=lf
+
+# Committed dev/release files that must NOT ship in the `git archive` store package.
+# NOTE: LICENSE is intentionally NOT export-ignored — the PolyForm Noncommercial
+# license requires its terms to travel with any distributed copy of the software,
+# so it must remain inside the uploaded Chrome Web Store zip.
+# Directory trees carry both the `dir/` and `dir/**` forms so the exclusion is
+# honored by `git archive` and also reported by `git check-attr`.
+.gitignore export-ignore
+.gitattributes export-ignore
+README.md export-ignore
+SECURITY.md export-ignore
+CHANGELOG.md export-ignore
+tests/ export-ignore
+tests/** export-ignore
+.github/ export-ignore
+.github/** export-ignore
+docs/ export-ignore
+docs/** export-ignore

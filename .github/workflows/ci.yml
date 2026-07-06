@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+# Cancel an in-progress run when a new commit is pushed to the same ref.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Syntax check & tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Syntax-check every JS/MJS file
+        # Node 22 auto-detects ES modules, so a single `node --check` validates the
+        # classic content scripts and the ES-module background/popup/settings/shared
+        # trees alike. xargs -n1 fails the step if any file has a syntax error.
+        run: |
+          find . -path ./.git -prune -o \( -name '*.js' -o -name '*.mjs' \) -print0 \
+            | xargs -0 -n1 node --check
+      - name: Run headless tests
+        run: |
+          for f in tests/*.test.mjs; do
+            echo "== $f =="
+            node "$f"
+          done
