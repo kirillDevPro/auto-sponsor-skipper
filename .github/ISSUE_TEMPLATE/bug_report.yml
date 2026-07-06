@@ -1,0 +1,71 @@
+name: Bug report
+description: Report a problem with the extension
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug report. **Note:** skip-segment timings come from the
+        [SponsorBlock](https://sponsor.ajay.app) community database, not this extension — report *wrong or
+        missing segments* to SponsorBlock, not here. This form is for bugs in the extension itself.
+  - type: input
+    id: version
+    attributes:
+      label: Extension version
+      description: Shown on `chrome://extensions`.
+      placeholder: "1.0.0"
+    validations:
+      required: true
+  - type: input
+    id: browser
+    attributes:
+      label: Browser & version
+      placeholder: "e.g. Chrome 126.0.6478.126"
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected to happen instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: If it involves a specific video, include the URL and the timestamp.
+      placeholder: |
+        1. Open ...
+        2. Play to ...
+        3. ...
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part?
+      options:
+        - Skipping (segments not skipped / skipped at the wrong time)
+        - Popup
+        - Options / settings page
+        - Channel whitelist
+        - Statistics
+        - Not sure
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: Console output (optional)
+      description: Open DevTools (F12) → Console and paste any errors. No personal data is needed.
+      render: shell
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Pre-submission checks
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: This is a bug in the extension, not a wrong SponsorBlock segment.
+          required: true

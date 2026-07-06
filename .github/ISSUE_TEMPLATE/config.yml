@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Wrong or missing skip segments
+    url: https://sponsor.ajay.app
+    about: Segment timings come from the SponsorBlock community database, not this extension. Report incorrect or missing segments to SponsorBlock, not here.
