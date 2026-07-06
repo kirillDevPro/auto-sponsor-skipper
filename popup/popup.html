@@ -1,0 +1,30 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header>
+      <h1 data-i18n="extName">Auto Sponsor Skipper</h1>
+      <label class="switch" data-i18n-title="popup_enabled">
+        <input type="checkbox" id="enabled" />
+        <span class="slider"></span>
+      </label>
+    </header>
+
+    <h2 data-i18n="popup_categories">Skip these segments</h2>
+    <div id="categories"></div>
+
+    <div class="counter">
+      <span class="lbl" data-i18n="popup_skipped">Segments skipped</span>
+      <span class="num" id="skipped-count">0</span>
+    </div>
+
+    <footer>
+      <button class="link" id="open-settings" data-i18n="popup_open_settings">More settings</button>
+    </footer>
+
+    <script type="module" src="popup.js"></script>
+  </body>
+</html>

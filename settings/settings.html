@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="stylesheet" href="settings.css" />
+  </head>
+  <body>
+    <main>
+      <h1 data-i18n="settings_title">Auto Sponsor Skipper — Settings</h1>
+
+      <section>
+        <h2 data-i18n="settings_general">General</h2>
+        <div class="field">
+          <label class="block" for="enabled" data-i18n="settings_enabled">Enable automatic skipping</label>
+          <input type="checkbox" id="enabled" />
+        </div>
+        <div>
+          <label class="block" for="min-length" data-i18n="settings_min_length">Minimum segment length (seconds)</label>
+          <div class="hint" data-i18n="settings_min_length_hint"></div>
+          <input type="number" id="min-length" min="0" step="1" value="0" />
+          <span class="saved" id="general-saved" data-i18n="settings_saved">Saved</span>
+        </div>
+      </section>
+
+      <section>
+        <h2 data-i18n="settings_categories">Categories to skip</h2>
+        <div id="categories"></div>
+      </section>
+
+      <section>
+        <h2 data-i18n="settings_whitelist">Channel whitelist</h2>
+        <div class="hint" data-i18n="settings_whitelist_hint"></div>
+        <div class="wl-add">
+          <input type="text" id="wl-input" data-i18n-placeholder="settings_whitelist_placeholder" />
+          <button id="wl-add" data-i18n="settings_whitelist_add">Add</button>
+        </div>
+        <ul class="wl" id="wl-list"></ul>
+      </section>
+
+      <section>
+        <h2 data-i18n="settings_stats">Statistics</h2>
+        <div class="stats">
+          <div class="stat"><div class="num" id="stat-count">0</div><div class="lbl" data-i18n="settings_stats_count">Segments skipped</div></div>
+          <div class="stat"><div class="num" id="stat-time">0s</div><div class="lbl" data-i18n="settings_stats_time">Time saved</div></div>
+        </div>
+        <button class="secondary" id="stat-reset" data-i18n="settings_stats_reset">Reset statistics</button>
+      </section>
+
+      <section class="about">
+        <p data-i18n="attribution"></p>
+        <p data-i18n="not_affiliated"></p>
+        <p data-i18n="privacy_note"></p>
+      </section>
+    </main>
+
+    <script type="module" src="settings.js"></script>
+  </body>
+</html>

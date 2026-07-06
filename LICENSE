@@ -1,0 +1,36 @@
+Auto Sponsor Skipper — Source-Available License
+Copyright (c) 2026 kirillDevPro. All rights reserved.
+
+This source code is published publicly for transparency and personal use only.
+It is NOT open-source software; only the limited rights below are granted.
+
+1. Permitted use. You may (a) view, read, and study the source code in this
+   repository; and (b) download and run the extension for your own private,
+   personal, non-commercial use (e.g. loading it unpacked in your own browser).
+
+2. Restrictions. Except as permitted above, and without prior written permission
+   of the copyright holder, you may NOT: (a) copy, redistribute, publish, upload,
+   sublicense, or sell this software or any part or derivative of it — in
+   particular you may NOT submit or publish it, or any modified or rebranded
+   version, to the Chrome Web Store or any other browser-extension marketplace,
+   app store, website, or distribution platform; (b) use it or any derivative for
+   any commercial purpose; or (c) remove or alter this notice, the copyright
+   notice, or the SponsorBlock attribution below.
+
+3. Third-party data. The extension retrieves community-submitted segment data at
+   runtime from the SponsorBlock project (https://sponsor.ajay.app), licensed
+   CC BY-NC-SA 4.0. That data is provided by SponsorBlock and its contributors,
+   not by the author, and is not covered by this license. This project is a free,
+   non-commercial, read-only client and is NOT affiliated with, endorsed by, or
+   created by SponsorBlock, YouTube, or Google.
+
+4. No warranty. THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+   EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO MERCHANTABILITY, FITNESS FOR
+   A PARTICULAR PURPOSE, ACCURACY, AND NON-INFRINGEMENT. YOU USE THE SOFTWARE
+   ENTIRELY AT YOUR OWN RISK.
+
+5. Limitation of liability. TO THE MAXIMUM EXTENT PERMITTED BY APPLICABLE LAW,
+   IN NO EVENT SHALL THE AUTHOR OR COPYRIGHT HOLDER BE LIABLE FOR ANY CLAIM,
+   DAMAGES, OR OTHER LIABILITY, WHETHER IN CONTRACT, TORT, OR OTHERWISE, ARISING
+   FROM OR IN CONNECTION WITH THE SOFTWARE, ITS USE, THE SEGMENT DATA IT
+   DISPLAYS, OR ANY INABILITY TO USE IT.

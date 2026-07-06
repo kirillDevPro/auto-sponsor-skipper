@@ -1,0 +1,230 @@
+/* ============================================
+   POPUP STYLES - MATERIAL DESIGN 3 (dark only)
+   Shared visual language with "Pages Auto Updater":
+   one fixed dark palette, blue primary, pill buttons,
+   elevated surface cards.
+   ============================================ */
+
+:root {
+  color-scheme: dark;
+
+  /* Primary */
+  --md-sys-color-primary: #60A5FA;
+  --md-sys-color-on-primary: #FFFFFF;
+  --md-sys-color-primary-container: #2563EB;
+  --md-sys-color-on-primary-container: #DBEAFE;
+
+  /* Surface */
+  --md-sys-color-surface: #1E1E21;
+  --md-sys-color-surface-container-lowest: #161618;
+  --md-sys-color-surface-container-low: #252528;
+  --md-sys-color-surface-container: #2D2D31;
+  --md-sys-color-surface-container-high: #363639;
+  --md-sys-color-surface-container-highest: #414145;
+  --md-sys-color-on-surface: #ECECEF;
+  --md-sys-color-on-surface-variant: #A8A8B0;
+
+  /* Outline */
+  --md-sys-color-outline: #6B6B75;
+  --md-sys-color-outline-variant: #505058;
+
+  /* Elevation shadows */
+  --md-sys-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
+  --md-sys-elevation-2: 0 4px 6px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
+
+  /* Motion */
+  --md-sys-motion-easing-standard: cubic-bezier(0.2, 0, 0, 1);
+  --md-sys-motion-duration-short: 150ms;
+
+  /* Shape */
+  --md-sys-shape-corner-small: 8px;
+  --md-sys-shape-corner-medium: 12px;
+  --md-sys-shape-corner-full: 100px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  height: auto;
+  overflow: hidden;
+}
+
+body {
+  width: 360px;
+  margin: 0;
+  padding: 12px;
+  font-family: 'Google Sans', 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface);
+  -webkit-font-smoothing: antialiased;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* === HEADER === */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 2px 2px 0;
+  margin: 0;
+}
+
+header h1 {
+  font-size: 1.0625rem;
+  font-weight: 500;
+  margin: 0;
+  letter-spacing: -0.01em;
+  color: var(--md-sys-color-on-surface);
+}
+
+/* === MASTER TOGGLE SWITCH === */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  flex: none;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  inset: 0;
+  cursor: pointer;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-surface-container-highest);
+  transition: background-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+.slider::before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  top: 3px;
+  background-color: #FFFFFF;
+  border-radius: 50%;
+  box-shadow: var(--md-sys-elevation-1);
+  transition: transform var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+.switch input:checked + .slider { background-color: var(--md-sys-color-primary); }
+.switch input:checked + .slider::before { transform: translateX(18px); }
+
+/* === SECTION HEADING === */
+h2 {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--md-sys-color-on-surface-variant);
+  margin: 0;
+  padding: 0 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* === CATEGORIES CARD === */
+#categories {
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
+  padding: 6px 12px;
+}
+
+.cat {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+}
+
+.cat input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  accent-color: var(--md-sys-color-primary);
+  cursor: pointer;
+}
+
+.cat label {
+  flex: 1;
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+}
+
+/* === SKIP COUNTER CARD === */
+.counter {
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.counter .lbl {
+  color: var(--md-sys-color-on-surface-variant);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.counter .num {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+/* === FOOTER (MD3 tonal button) === */
+footer {
+  margin: 0;
+  padding: 0;
+}
+
+button.link {
+  display: block;
+  width: 100%;
+  font: inherit;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  padding: 9px 16px;
+  border: none;
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-surface-container-high);
+  color: var(--md-sys-color-on-surface);
+  cursor: pointer;
+  text-decoration: none;
+  box-shadow: var(--md-sys-elevation-1);
+  transition: background-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard),
+              box-shadow var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+button.link:hover {
+  background-color: var(--md-sys-color-surface-container-highest);
+  box-shadow: var(--md-sys-elevation-2);
+}
+
+button.link:active { transform: scale(0.99); }
+
+/* === DISABLED (master off) === */
+body.disabled #categories,
+body.disabled .counter {
+  opacity: 0.5;
+}
