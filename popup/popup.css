@@ -164,32 +164,40 @@ h2 {
   cursor: pointer;
 }
 
-/* === SKIP COUNTER CARD === */
+/* === STAT TILES (segments skipped | time saved) === */
 .counter {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.tile {
   background-color: var(--md-sys-color-surface-container);
   border: 1px solid var(--md-sys-color-outline-variant);
   border-radius: var(--md-sys-shape-corner-medium);
   box-shadow: var(--md-sys-elevation-1);
-  padding: 10px 12px;
+  padding: 12px 10px;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: space-between;
+  gap: 4px;
+  text-align: center;
 }
 
-.counter .lbl {
+.tile .num {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--md-sys-color-primary);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+
+.tile .lbl {
   color: var(--md-sys-color-on-surface-variant);
   font-size: 0.6875rem;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-}
-
-.counter .num {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: var(--md-sys-color-primary);
-  font-variant-numeric: tabular-nums;
-  line-height: 1.2;
 }
 
 /* === FOOTER (MD3 tonal button) === */

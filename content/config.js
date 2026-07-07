@@ -37,8 +37,9 @@
       filler: false,
       music_offtopic: false
     },
-    minSegmentLength: 0,
-    showTimelineMarkers: true
+    minSegmentLength: 3,
+    showTimelineMarkers: true,
+    language: "en"
   };
 
   // Timeline-marker fill per category. Deliberate duplicate of

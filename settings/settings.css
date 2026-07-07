@@ -83,6 +83,49 @@ h1 {
   letter-spacing: -0.01em;
 }
 
+/* === TABS (Settings | Statistics) === */
+.tabs {
+  display: flex;
+  gap: 8px;
+  padding: 4px 32px 8px;
+}
+
+.tab {
+  flex: 1;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  padding: 11px 16px;
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-full);
+  background-color: var(--md-sys-color-surface-container);
+  color: var(--md-sys-color-on-surface-variant);
+  cursor: pointer;
+  box-shadow: none;
+  transition: background-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard),
+              color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+/* Neutralize the global button ripple overlay for the tab chips. */
+.tab::before { display: none; }
+
+.tab:hover {
+  background-color: var(--md-sys-color-surface-container-high);
+  box-shadow: none;
+}
+
+.tab.active {
+  background-color: var(--md-sys-color-primary-container);
+  color: var(--md-sys-color-on-primary-container);
+  border-color: transparent;
+}
+
+.tab.active:hover { background-color: var(--md-sys-color-primary-container); }
+
+/* === TAB PANELS === */
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
 /* === SECTIONS === */
 section {
   padding: 12px 32px 24px;
@@ -168,6 +211,36 @@ input[type="text"]:focus {
   border-color: var(--md-sys-color-primary);
   border-width: 2px;
   padding: 11px 13px;
+}
+
+/* Language selector — MD3 outlined field with a custom chevron (native arrow
+   removed via appearance:none; the chevron is an inline data-URI SVG so no
+   external asset / web_accessible_resource is needed). */
+select {
+  font: inherit;
+  font-size: 1rem;
+  color: var(--md-sys-color-on-surface);
+  background-color: var(--md-sys-color-surface-container-high);
+  border: 1px solid var(--md-sys-color-outline);
+  border-radius: var(--md-sys-shape-corner-small);
+  padding: 12px 42px 12px 14px;
+  min-width: 168px;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23A8A8B0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  transition: border-color var(--md-sys-motion-duration-short) var(--md-sys-motion-easing-standard);
+}
+
+select:hover { border-color: var(--md-sys-color-on-surface); }
+
+select:focus {
+  outline: none;
+  border-color: var(--md-sys-color-primary);
+  border-width: 2px;
+  padding: 11px 41px 11px 13px;
 }
 
 input[type="number"] {

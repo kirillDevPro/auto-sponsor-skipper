@@ -11,13 +11,16 @@
 
 import { WHITELIST_KEY } from "../shared/categories.js";
 import { loadWhitelist, updateWhitelist } from "../shared/settingsStore.js";
-import { t } from "./i18n.js";
+import { t, getLanguage, onLanguageChange } from "../shared/i18n.js";
 
 /**
  * Normalize user input (handle, channel id, or a full URL) to the SAME id form
  * content/channel.js returns, so the entry actually matches at skip time:
  * "@handle", "channel/UC...", "c/name", or "user/name". Unrecognized input
  * returns null (not stored) rather than a value that could never match.
+ * @param {string} raw - user-entered channel text or URL.
+ * @returns {string|null} normalized channel id/handle, or null when unsupported.
+ * @sideEffects None.
  */
 export function normalizeChannel(raw) {
   const s = (raw || "").trim();
@@ -27,30 +30,41 @@ export function normalizeChannel(raw) {
   const m = s.match(/(@[^/?#\s]+|channel\/[^/?#\s]+|c\/[^/?#\s]+|user\/[^/?#\s]+)/);
   if (m) return m[1];
 
-  // A bare channel ID (UC + ~22 chars) — content/channel.js sees "channel/UC...".
+  // A bare channel ID (UC + ~22 chars); content/channel.js sees "channel/UC...".
   if (/^UC[0-9A-Za-z_-]{10,}$/.test(s)) return "channel/" + s;
 
   // A bare handle typed without the leading @.
   if (/^[A-Za-z0-9._-]+$/.test(s)) return "@" + s;
 
-  return null; // unsupported format — don't store an unmatchable entry
+  return null; // unsupported format; don't store an unmatchable entry
 }
 
-/** Wire the whitelist add/list/remove UI. */
+/**
+ * Wire the whitelist add/list/remove UI.
+ * @returns {Promise<void>}
+ * @sideEffects Reads/writes chrome.storage.local, renders the whitelist, adds
+ *   DOM listeners, and registers storage/language-change listeners.
+ */
 export async function initWhitelist() {
   const listEl = document.getElementById("wl-list");
   const inputEl = document.getElementById("wl-input");
   const addEl = document.getElementById("wl-add");
 
   let list = await loadWhitelist();
+  let lang = await getLanguage();
 
+  /**
+   * Render the current whitelist using the current language.
+   * @returns {void}
+   * @sideEffects Rebuilds the whitelist DOM and button listeners.
+   */
   function render() {
     listEl.textContent = "";
     if (list.length === 0) {
       const li = document.createElement("li");
       const span = document.createElement("span");
       span.className = "empty";
-      span.textContent = t("settings_whitelist_empty");
+      span.textContent = t(lang, "settings_whitelist_empty");
       li.append(span);
       listEl.append(li);
       return;
@@ -61,7 +75,7 @@ export async function initWhitelist() {
       span.textContent = ch;
       const btn = document.createElement("button");
       btn.className = "secondary";
-      btn.textContent = t("settings_remove");
+      btn.textContent = t(lang, "settings_remove");
       btn.addEventListener("click", async () => {
         list = await updateWhitelist((l) => l.filter((x) => x !== ch));
         render();
@@ -71,6 +85,11 @@ export async function initWhitelist() {
     }
   }
 
+  /**
+   * Normalize and add the current input value to the whitelist.
+   * @returns {Promise<void>}
+   * @sideEffects Clears the input, writes chrome.storage.local when valid, and re-renders.
+   */
   async function add() {
     const ch = normalizeChannel(inputEl.value);
     inputEl.value = "";
@@ -89,6 +108,12 @@ export async function initWhitelist() {
       list = changes[WHITELIST_KEY].newValue || [];
       render();
     }
+  });
+
+  // Re-render so "Remove" / the empty-state line re-localize on a language switch.
+  onLanguageChange(lang, (newLang) => {
+    lang = newLang;
+    render();
   });
 
   render();

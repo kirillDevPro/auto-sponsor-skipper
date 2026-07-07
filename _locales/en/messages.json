@@ -1,46 +1,10 @@
 {
   "extName": {
     "message": "Auto Sponsor Skipper",
-    "description": "Extension name shown in Chrome and the Web Store."
+    "description": "Extension name shown in Chrome and the Web Store. Brand name — keep identical across all _locales."
   },
   "extDescription": {
     "message": "Automatically skips sponsor, self-promotion, and reminder segments on YouTube using SponsorBlock community data. No tracking.",
     "description": "Extension description / store subtitle."
-  },
-  "cat_sponsor": { "message": "Sponsor", "description": "Category: paid sponsor promotion." },
-  "cat_selfpromo": { "message": "Self-promotion", "description": "Category: creator promoting their own stuff." },
-  "cat_interaction": { "message": "Reminders (like / subscribe)", "description": "Category: interaction reminders." },
-  "cat_intro": { "message": "Intro / intermission", "description": "Category: intro animation or intermission." },
-  "cat_outro": { "message": "Outro / endcards", "description": "Category: endcards and credits." },
-  "cat_preview": { "message": "Preview / recap", "description": "Category: preview or recap of the video." },
-  "cat_filler": { "message": "Filler / tangent", "description": "Category: off-topic filler." },
-  "cat_music_offtopic": { "message": "Non-music section", "description": "Category: non-music section in a music video." },
-
-  "popup_enabled": { "message": "Skipping enabled", "description": "Popup master on/off toggle label." },
-  "popup_categories": { "message": "Skip these segments", "description": "Popup categories section heading." },
-  "popup_skipped": { "message": "Segments skipped", "description": "Popup skip counter label." },
-  "popup_open_settings": { "message": "More settings", "description": "Popup link to the options page." },
-
-  "settings_title": { "message": "Auto Sponsor Skipper — Settings", "description": "Options page title." },
-  "settings_general": { "message": "General", "description": "Options: general section heading." },
-  "settings_enabled": { "message": "Enable automatic skipping", "description": "Options: master enable label." },
-  "settings_timeline_markers": { "message": "Show segment markers on the progress bar", "description": "Options: toggle for the colored skip-segment markers drawn on the video timeline." },
-  "settings_categories": { "message": "Categories to skip", "description": "Options: categories heading." },
-  "settings_min_length": { "message": "Minimum segment length (seconds)", "description": "Options: min length label." },
-  "settings_min_length_hint": { "message": "Segments shorter than this are ignored. 0 = skip all.", "description": "Options: min length hint." },
-  "settings_whitelist": { "message": "Channel whitelist", "description": "Options: whitelist heading." },
-  "settings_whitelist_hint": { "message": "Skipping is disabled on these channels. Add a channel handle (e.g. @channelname) or channel/UC... id.", "description": "Options: whitelist hint." },
-  "settings_whitelist_add": { "message": "Add", "description": "Options: whitelist add button." },
-  "settings_whitelist_placeholder": { "message": "@channelname", "description": "Options: whitelist input placeholder." },
-  "settings_whitelist_empty": { "message": "No channels whitelisted.", "description": "Options: empty whitelist." },
-  "settings_remove": { "message": "Remove", "description": "Options: remove button." },
-  "settings_stats": { "message": "Statistics", "description": "Options: statistics heading." },
-  "settings_stats_count": { "message": "Segments skipped", "description": "Options: stat count label." },
-  "settings_stats_time": { "message": "Time saved", "description": "Options: stat time label." },
-  "settings_stats_reset": { "message": "Reset statistics", "description": "Options: reset stats button." },
-  "settings_saved": { "message": "Saved", "description": "Transient saved indicator." },
-
-  "attribution": { "message": "Segment data by SponsorBlock (sponsor.ajay.app), licensed CC BY-NC-SA 4.0.", "description": "SponsorBlock attribution." },
-  "not_affiliated": { "message": "This is a free, non-commercial, read-only client and is not affiliated with, endorsed by, or created by SponsorBlock or YouTube / Google.", "description": "Non-affiliation notice." },
-  "privacy_note": { "message": "Only a 4-character hash of the video ID is sent to SponsorBlock to look up segments. We run no servers, no analytics, and no tracking. Your settings are stored by Chrome and, if you have Chrome Sync turned on, synced across your signed-in browsers; statistics and the channel whitelist stay on this device.", "description": "Privacy note." }
+  }
 }

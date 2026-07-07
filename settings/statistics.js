@@ -4,34 +4,39 @@
  */
 
 import { loadStats, resetStats } from "../shared/settingsStore.js";
+import { formatDuration, getLanguage, onLanguageChange } from "../shared/i18n.js";
 
-/** Format a duration in seconds as a compact "1h 2m 3s" string. */
-function formatDuration(totalSeconds) {
-  const s = Math.max(0, Math.round(totalSeconds || 0));
-  const h = Math.floor(s / 3600);
-  const m = Math.floor((s % 3600) / 60);
-  const sec = s % 60;
-  const parts = [];
-  if (h) parts.push(h + "h");
-  if (m) parts.push(m + "m");
-  parts.push(sec + "s");
-  return parts.join(" ");
-}
-
-/** Wire the statistics display + reset button. */
+/**
+ * Wire the statistics display and reset button.
+ * @returns {Promise<void>}
+ * @sideEffects Reads/writes chrome.storage.local, updates stat text, adds a reset
+ *   listener, and registers a language-change listener.
+ */
 export async function initStatistics() {
   const countEl = document.getElementById("stat-count");
   const timeEl = document.getElementById("stat-time");
   const resetEl = document.getElementById("stat-reset");
+  let lang = await getLanguage();
 
+  /**
+   * Render the current statistics using the current language.
+   * @returns {Promise<void>}
+   * @sideEffects Reads chrome.storage.local and updates statistic text.
+   */
   async function render() {
     const stats = await loadStats();
     countEl.textContent = String(stats.count || 0);
-    timeEl.textContent = formatDuration(stats.seconds);
+    timeEl.textContent = formatDuration(stats.seconds, lang);
   }
 
   resetEl.addEventListener("click", async () => {
     await resetStats();
+    render();
+  });
+
+  // Re-render so the localized time units update on a live language switch.
+  onLanguageChange(lang, (newLang) => {
+    lang = newLang;
     render();
   });
 

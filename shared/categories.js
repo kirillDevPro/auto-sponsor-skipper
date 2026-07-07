@@ -46,8 +46,11 @@ export const CATEGORY_COLORS = Object.fromEntries(CATEGORIES.map((c) => [c.id, c
 export const DEFAULT_SETTINGS = {
   enabled: true,
   categories: Object.fromEntries(CATEGORIES.map((c) => [c.id, c.defaultOn])),
-  minSegmentLength: 0,
-  showTimelineMarkers: true
+  minSegmentLength: 3,
+  showTimelineMarkers: true,
+  // Selected UI language for the in-page popup/options runtime (shared/i18n.js);
+  // "en" default is independent of the browser locale. Not read by the SW.
+  language: "en"
 };
 
 /** chrome.storage.sync key holding the DEFAULT_SETTINGS-shaped object. */

@@ -11,19 +11,29 @@
 
 import { CATEGORIES, SETTINGS_KEY } from "../shared/categories.js";
 import { loadSettings, updateSettings } from "../shared/settingsStore.js";
-import { t } from "./i18n.js";
+import { t, localizePage, LANGUAGES, onLanguageChange } from "../shared/i18n.js";
 
-/** Briefly flash a "Saved" indicator next to the general controls. */
+/**
+ * Briefly flash a "Saved" indicator next to the general controls.
+ * @returns {void}
+ * @sideEffects Toggles the indicator class and schedules its removal.
+ */
 function flashSaved() {
   const el = document.getElementById("general-saved");
   el.classList.add("show");
   setTimeout(() => el.classList.remove("show"), 1200);
 }
 
-/** Wire the General + Categories sections. */
+/**
+ * Wire the General + Categories sections.
+ * @returns {Promise<void>}
+ * @sideEffects Reads/writes chrome.storage, builds category/language controls,
+ *   adds DOM listeners, and registers storage/language-change listeners.
+ */
 export async function initGlobal() {
   let settings = await loadSettings();
 
+  const langEl = document.getElementById("ui-language");
   const enabledEl = document.getElementById("enabled");
   const markersEl = document.getElementById("show-timeline-markers");
   const minEl = document.getElementById("min-length");
@@ -33,9 +43,12 @@ export async function initGlobal() {
    * Push current settings into the controls (no rebuild of the rows). Skips the
    * element the user is currently editing so an external change arriving
    * mid-edit doesn't discard their uncommitted keystrokes.
+   * @returns {void}
+   * @sideEffects Updates form control values and checked states.
    */
   function syncControls() {
     const active = document.activeElement;
+    if (active !== langEl) langEl.value = settings.language;
     if (active !== enabledEl) enabledEl.checked = settings.enabled;
     if (active !== markersEl) markersEl.checked = settings.showTimelineMarkers;
     if (active !== minEl) minEl.value = String(settings.minSegmentLength || 0);
@@ -44,6 +57,23 @@ export async function initGlobal() {
       if (input && input !== active) input.checked = settings.categories[cat.id] === true;
     }
   }
+
+  // Language selector: populate from the shipped languages (endonym labels),
+  // reflect the stored choice, and persist on change. The write triggers
+  // storage.onChanged -> onLanguageChange (below), which re-localizes the page.
+  for (const { code, name } of LANGUAGES) {
+    const opt = document.createElement("option");
+    opt.value = code;
+    opt.textContent = name;
+    langEl.append(opt);
+  }
+  langEl.value = settings.language;
+  langEl.addEventListener("change", async () => {
+    settings = await updateSettings((s) => {
+      s.language = langEl.value;
+    });
+    flashSaved();
+  });
 
   enabledEl.checked = settings.enabled;
   enabledEl.addEventListener("change", async () => {
@@ -89,7 +119,8 @@ export async function initGlobal() {
 
     const label = document.createElement("label");
     label.htmlFor = input.id;
-    label.textContent = t(cat.i18nKey);
+    label.dataset.i18n = cat.i18nKey;
+    label.textContent = t(settings.language, cat.i18nKey);
 
     row.append(input, label);
     catsEl.append(row);
@@ -100,5 +131,14 @@ export async function initGlobal() {
       settings = await loadSettings();
       syncControls();
     }
+  });
+
+  // Re-localize the static page + category labels (data-i18n) live when the
+  // language changes — fires only on an actual settings.language change. Also
+  // reflect it in the selector: syncControls skips langEl while it is focused,
+  // which would otherwise leave the control out of step after an external change.
+  onLanguageChange(settings.language, (lang) => {
+    langEl.value = lang;
+    localizePage(document, lang);
   });
 }

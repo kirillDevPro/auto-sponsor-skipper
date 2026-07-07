@@ -196,7 +196,7 @@
       bar.removeEventListener("mouseleave", leave);
     });
 
-    // Re-inject if YouTube REPLACES the bar, its container, or rebuilds their
+    // Re-inject if YouTube swaps out the bar, its container, or rebuilds their
     // children (dropping our layer) — ad<->content, chapter/scrubber rebuilds,
     // some SPA nav. Observe the childList of the bar and its two nearest ancestors,
     // all WITHOUT subtree, so YouTube's constant descendant style churn doesn't
@@ -275,6 +275,12 @@
     });
   }
 
+  /**
+   * Update the hover tooltip for the current pointer position.
+   * @param {number} clientX - pointer x-coordinate in viewport pixels.
+   * @returns {void}
+   * @sideEffects Updates tooltip text, position, and visibility.
+   */
   function updateTip(clientX) {
     if (!tipEl || !barEl) return;
     const rect = barEl.getBoundingClientRect();
@@ -290,8 +296,7 @@
       }
     }
     if (!seg) { hideTip(); return; }
-    const name =
-      (chrome.i18n && chrome.i18n.getMessage("cat_" + seg.category)) || seg.category;
+    const name = NS.i18n.catName(seg.category);
     const text = name + " · " + NS.timelineGeometry.formatLength(seg.length);
     if (tipEl.textContent !== text) tipEl.textContent = text;
     tipEl.style.left = (clientX - rect.left) + "px";
