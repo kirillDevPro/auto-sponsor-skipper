@@ -3,6 +3,7 @@
 </p>
 
 <p align="center">
+  <a href="https://chromewebstore.google.com/detail/auto-sponsor-skipper/nlneheilnhkcgepoepjjlcfedngaapce"><img src="https://img.shields.io/chrome-web-store/v/nlneheilnhkcgepoepjjlcfedngaapce?label=Chrome%20Web%20Store&color=4285F4&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://github.com/kirillDevPro/auto-sponsor-skipper/actions/workflows/ci.yml"><img src="https://github.com/kirillDevPro/auto-sponsor-skipper/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-4285F4" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-source--available%20%C2%B7%20personal%20use-2563EB" alt="License: source-available, personal use only"></a>
@@ -13,7 +14,7 @@
   <a href="#features">Features</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="#permissions--data">Permissions &amp; data</a> ·
-  <a href="#install-from-source">Install</a> ·
+  <a href="#install">Install</a> ·
   <a href="#privacy">Privacy</a> ·
   <a href="#license">License</a>
 </p>
@@ -45,13 +46,17 @@ No remote code is loaded or executed — the service worker fetches JSON **data*
 
 Not requested: `tabs`, `activeTab`, `history`, `alarms`, `scripting`, `unlimitedStorage`, or any broad host permission.
 
-## Install from source
+## Install
+### From the Chrome Web Store (recommended)
+1. Open the listing: **[Auto Sponsor Skipper on the Chrome Web Store](https://chromewebstore.google.com/detail/auto-sponsor-skipper/nlneheilnhkcgepoepjjlcfedngaapce)**.
+2. Click **Add to Chrome**, then **Add extension** to confirm.
+3. Open any YouTube watch page — skipping starts automatically. Use the toolbar icon to toggle categories or the options page for the whitelist and stats.
+
+### From source (for development)
 1. Download or clone this repository.
 2. Open `chrome://extensions` in Chrome.
 3. Enable **Developer mode** (top-right).
 4. Click **Load unpacked** and select the repository folder.
-
-> Once published, the extension will also be available on the Chrome Web Store: _link coming soon_.
 
 ## Building the store zip
 There is no build step. The upload package is produced straight from a committed tree with `git archive`, which honors the `export-ignore` rules in `.gitattributes` so development files never ship:
