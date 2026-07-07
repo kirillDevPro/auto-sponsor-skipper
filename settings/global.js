@@ -1,7 +1,7 @@
 /**
  * settings/global.js — the General + Categories sections of the options page:
- * the master enable toggle, the minimum-segment-length input, and the
- * per-category checkboxes.
+ * the master enable toggle, the timeline-marker toggle, the
+ * minimum-segment-length input, and the per-category checkboxes.
  *
  * options_ui uses open_in_tab, so this page can live for a long time. Every
  * write is a read-fresh-modify-write via updateSettings so it can't clobber a
@@ -25,6 +25,7 @@ export async function initGlobal() {
   let settings = await loadSettings();
 
   const enabledEl = document.getElementById("enabled");
+  const markersEl = document.getElementById("show-timeline-markers");
   const minEl = document.getElementById("min-length");
   const catsEl = document.getElementById("categories");
 
@@ -36,6 +37,7 @@ export async function initGlobal() {
   function syncControls() {
     const active = document.activeElement;
     if (active !== enabledEl) enabledEl.checked = settings.enabled;
+    if (active !== markersEl) markersEl.checked = settings.showTimelineMarkers;
     if (active !== minEl) minEl.value = String(settings.minSegmentLength || 0);
     for (const cat of CATEGORIES) {
       const input = document.getElementById("cat-" + cat.id);
@@ -47,6 +49,14 @@ export async function initGlobal() {
   enabledEl.addEventListener("change", async () => {
     settings = await updateSettings((s) => {
       s.enabled = enabledEl.checked;
+    });
+    flashSaved();
+  });
+
+  markersEl.checked = settings.showTimelineMarkers;
+  markersEl.addEventListener("change", async () => {
+    settings = await updateSettings((s) => {
+      s.showTimelineMarkers = markersEl.checked;
     });
     flashSaved();
   });

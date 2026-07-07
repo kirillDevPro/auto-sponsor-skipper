@@ -33,15 +33,10 @@
     );
   }
 
-  /** Filter raw segments to the enabled categories + min-length, per settings. */
-  function computeActive(raw) {
-    const s = NS.settings.get();
-    if (!s.enabled) return [];
-    const minLen = s.minSegmentLength || 0;
-    return (raw || []).filter(
-      (seg) =>
-        s.categories[seg.category] === true && seg.end - seg.start >= minLen
-    );
+  /** The active (to-skip) segments for the current video + settings + whitelist,
+   *  via the shared filter so this list always equals the drawn marker set. */
+  function computeActive() {
+    return NS.segmentFilter.filterActive(currentRaw, NS.settings.get(), currentWhitelisted);
   }
 
   function onTimeUpdate(e) {
@@ -77,7 +72,7 @@
       currentRaw = rawSegments || [];
       currentWhitelisted = !!opts.whitelisted;
       recentlySkipped = new Set();
-      activeSegments = currentWhitelisted ? [] : computeActive(currentRaw);
+      activeSegments = computeActive();
       if (video && !boundVideos.has(video)) {
         boundVideos.add(video);
         video.addEventListener("timeupdate", onTimeUpdate);
@@ -87,7 +82,7 @@
     /** Recompute the active list after a live settings change (no rebind). */
     reapply() {
       recentlySkipped = new Set();
-      activeSegments = currentWhitelisted ? [] : computeActive(currentRaw);
+      activeSegments = computeActive();
     },
 
     /** Drop all segments (e.g. when the tab leaves a watch page). */

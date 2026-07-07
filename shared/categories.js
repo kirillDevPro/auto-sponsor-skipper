@@ -5,34 +5,49 @@
  * This is an ES module. It is imported directly by the service worker
  * (background/, type:module), the popup, and the options page (all modules).
  * The CONTENT script tree is loaded as classic scripts (no ES imports), so it
- * carries a deliberately-duplicated copy of DEFAULT_SETTINGS + the keys in
- * content/config.js — keep the two in sync (separate module-tree convention).
+ * carries deliberate duplicates of DEFAULT_SETTINGS, CATEGORY_COLORS, and the
+ * storage keys in content/config.js - keep those in sync (separate module-tree
+ * convention).
  *
  * Only categories whose SponsorBlock actionType is "skip" belong here. The
  * non-skip categories (poi_highlight, exclusive_access, chapter) are excluded
  * on purpose so the UI never shows a toggle that can't do anything.
  */
 
-/** Ordered category catalog. `defaultOn` seeds a fresh install. */
+/**
+ * Ordered category catalog. `defaultOn` seeds a fresh install; `color` is the
+ * timeline-marker fill and matches SponsorBlock's canonical per-category colors
+ * (from its src/config.ts barTypes) so markers read as the familiar SponsorBlock
+ * palette.
+ */
 export const CATEGORIES = [
-  { id: "sponsor",        defaultOn: true,  i18nKey: "cat_sponsor" },
-  { id: "selfpromo",      defaultOn: true,  i18nKey: "cat_selfpromo" },
-  { id: "interaction",    defaultOn: true,  i18nKey: "cat_interaction" },
-  { id: "intro",          defaultOn: false, i18nKey: "cat_intro" },
-  { id: "outro",          defaultOn: false, i18nKey: "cat_outro" },
-  { id: "preview",        defaultOn: false, i18nKey: "cat_preview" },
-  { id: "filler",         defaultOn: false, i18nKey: "cat_filler" },
-  { id: "music_offtopic", defaultOn: false, i18nKey: "cat_music_offtopic" }
+  { id: "sponsor",        defaultOn: true,  i18nKey: "cat_sponsor",        color: "#00d400" },
+  { id: "selfpromo",      defaultOn: true,  i18nKey: "cat_selfpromo",      color: "#ffff00" },
+  { id: "interaction",    defaultOn: true,  i18nKey: "cat_interaction",    color: "#cc00ff" },
+  { id: "intro",          defaultOn: false, i18nKey: "cat_intro",          color: "#00ffff" },
+  { id: "outro",          defaultOn: false, i18nKey: "cat_outro",          color: "#0202ed" },
+  { id: "preview",        defaultOn: false, i18nKey: "cat_preview",        color: "#008fd6" },
+  { id: "filler",         defaultOn: false, i18nKey: "cat_filler",         color: "#7300ff" },
+  { id: "music_offtopic", defaultOn: false, i18nKey: "cat_music_offtopic", color: "#ff9900" }
 ];
 
 /** All category ids — the superset the service worker queries from the API. */
 export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
 
+/**
+ * Category id → timeline-marker color. The content script tree is classic (no
+ * imports), so it carries a deliberate duplicate of this map in
+ * content/config.js (NS.CATEGORY_COLORS) — keep the two in sync, exactly like
+ * DEFAULT_SETTINGS / NS.DEFAULTS.
+ */
+export const CATEGORY_COLORS = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.color]));
+
 /** Default settings object stored under SETTINGS_KEY in chrome.storage.sync. */
 export const DEFAULT_SETTINGS = {
   enabled: true,
   categories: Object.fromEntries(CATEGORIES.map((c) => [c.id, c.defaultOn])),
-  minSegmentLength: 0
+  minSegmentLength: 0,
+  showTimelineMarkers: true
 };
 
 /** chrome.storage.sync key holding the DEFAULT_SETTINGS-shaped object. */

@@ -8,8 +8,9 @@
  * global scope. Each module is wrapped in an IIFE so its locals don't collide,
  * and attaches its public surface to __SBSKIP__.
  *
- * DEFAULTS below is a deliberate duplicate of shared/categories.js
- * DEFAULT_SETTINGS (the module tree can't be imported here) — keep them in sync.
+ * DEFAULTS and CATEGORY_COLORS below deliberately duplicate shared/categories.js
+ * DEFAULT_SETTINGS and CATEGORY_COLORS (the module tree can't be imported here)
+ * - keep both pairs in sync.
  */
 
 ;(() => {
@@ -36,7 +37,22 @@
       filler: false,
       music_offtopic: false
     },
-    minSegmentLength: 0
+    minSegmentLength: 0,
+    showTimelineMarkers: true
+  };
+
+  // Timeline-marker fill per category. Deliberate duplicate of
+  // shared/categories.js CATEGORY_COLORS (the classic content tree can't import
+  // the module) - keep the two in sync, like DEFAULTS above.
+  NS.CATEGORY_COLORS = {
+    sponsor: "#00d400",
+    selfpromo: "#ffff00",
+    interaction: "#cc00ff",
+    intro: "#00ffff",
+    outro: "#0202ed",
+    preview: "#008fd6",
+    filler: "#7300ff",
+    music_offtopic: "#ff9900"
   };
 
   /** Namespaced debug logger (visible in the page console under a filter). */

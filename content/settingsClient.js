@@ -17,7 +17,11 @@
       enabled: s.enabled !== undefined ? s.enabled : d.enabled,
       categories: Object.assign({}, d.categories, s.categories || {}),
       minSegmentLength:
-        typeof s.minSegmentLength === "number" ? s.minSegmentLength : d.minSegmentLength
+        typeof s.minSegmentLength === "number" ? s.minSegmentLength : d.minSegmentLength,
+      showTimelineMarkers:
+        typeof s.showTimelineMarkers === "boolean"
+          ? s.showTimelineMarkers
+          : d.showTimelineMarkers
     };
   }
 

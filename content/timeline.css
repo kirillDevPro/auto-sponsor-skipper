@@ -1,0 +1,54 @@
+/* ============================================
+   TIMELINE MARKERS — injected on YouTube watch pages via manifest
+   content_scripts[].css (exempt from the page CSP; no web_accessible_resources
+   and no extra permission).
+
+   Structure only: per-segment fill color is set inline from JS
+   (content/timelineMarkers.js) from the SponsorBlock canonical palette. The
+   tooltip colors below are copied from the MD3 dark tokens in
+   settings/settings.css / popup/popup.css (content CSS can't import them) —
+   KEEP IN SYNC with those token blocks:
+     surface-container        #2D2D31
+     on-surface               #ECECEF
+     primary (accent border)  #60A5FA
+   ============================================ */
+
+/* Full-width overlay spanning the whole progress bar; never intercepts seeking. */
+.sbskip-marker-layer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 30; /* above play/load progress; placed in DOM before the scrubber */
+}
+
+/* One colored bar per skipped segment; left/width/background are set inline. */
+.sbskip-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  min-width: 2px;
+  opacity: 0.85;
+  pointer-events: none;
+}
+
+/* Hover tooltip: category name + length. Dark MD3 surface (see sync note above). */
+.sbskip-tip {
+  position: absolute;
+  bottom: 20px;
+  transform: translateX(-50%);
+  z-index: 1000;
+  pointer-events: none;
+  white-space: nowrap;
+  padding: 4px 8px;
+  border-radius: 8px;
+  border: 1px solid #60A5FA; /* --md-sys-color-primary */
+  background-color: #2D2D31; /* --md-sys-color-surface-container */
+  color: #ECECEF; /* --md-sys-color-on-surface */
+  font-family: 'Roboto', 'Arial', sans-serif;
+  font-size: 12px;
+  line-height: 1.4;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}

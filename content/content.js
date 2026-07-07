@@ -1,6 +1,7 @@
 /**
  * content/content.js — orchestrator, loaded last. Wires navigation → segment
- * fetch → skip engine, and re-applies on live settings changes.
+ * fetch → skip engine + timeline markers, and re-applies both on live settings
+ * changes.
  *
  * A monotonically increasing `token` guards against a stale async result: it is
  * bumped on EVERY navigation (including leaving a watch page), so a fetch that
@@ -11,6 +12,8 @@
 ;(() => {
   const NS = self.__SBSKIP__;
   let token = 0;
+  let lastVideoId = null; // the last videoId we committed to (distinguishes a real
+                          // navigation from a same-video retry / whitelist re-eval)
   const MAX_RETRIES = 3;
 
   async function onVideo(videoId, attempt = 0) {
@@ -19,8 +22,26 @@
     // Left the watch page: drop stale segments so a lingering miniplayer isn't
     // skipped with the previous video's data, and let pending retries die.
     if (!videoId) {
+      lastVideoId = null;
       NS.skipEngine.clear();
+      NS.timelineMarkers.clear();
       return;
+    }
+
+    // Only on a REAL navigation to a different video (not a same-video retry or a
+    // whitelist re-eval): drop the previous video's skip set AND markers NOW,
+    // before the async fetch, so they stay in lockstep and neither acts on stale
+    // data during the await window below — (a) a stale re-inject/duration callback
+    // from the old marker generation can't repaint the previous segments onto the
+    // freshly mounted bar, and (b) the reused <video>'s timeupdate can't seek using
+    // the previous video's segments before apply() re-arms them. For a same-video
+    // re-eval we keep the still-valid segments/markers serving until apply()/render()
+    // refresh them after the fetch, so an unrelated whitelist edit doesn't blink
+    // enforcement or markers off.
+    if (videoId !== lastVideoId) {
+      lastVideoId = videoId;
+      NS.skipEngine.clear();
+      NS.timelineMarkers.clear();
     }
 
     NS.log("video", videoId, attempt ? "(retry " + attempt + ")" : "");
@@ -44,6 +65,7 @@
       const segments = resp && resp.ok && resp.segments ? resp.segments : [];
 
       NS.skipEngine.apply(video, segments, { whitelisted });
+      NS.timelineMarkers.render(video, segments, { whitelisted });
       NS.log("applied", segments.length, "segments; whitelisted:", whitelisted);
 
       // Transient failure — either a fetch error, or the service worker was
@@ -63,7 +85,10 @@
   }
 
   // Live re-apply when the user toggles settings in the popup/options.
-  NS.onSettingsChanged = () => NS.skipEngine.reapply();
+  NS.onSettingsChanged = () => {
+    NS.skipEngine.reapply();
+    NS.timelineMarkers.reapply();
+  };
 
   // Whitelist edits change whether the CURRENT channel is skipped, which
   // reapply() alone can't recompute — re-run the full flow for this video.

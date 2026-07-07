@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "permissions": ["storage"],
@@ -40,9 +40,13 @@
         "content/navigation.js",
         "content/videoTarget.js",
         "content/skipCounter.js",
+        "content/segmentFilter.js",
+        "content/timelineGeometry.js",
         "content/skipEngine.js",
+        "content/timelineMarkers.js",
         "content/content.js"
       ],
+      "css": ["content/timeline.css"],
       "run_at": "document_idle",
       "all_frames": false
     }

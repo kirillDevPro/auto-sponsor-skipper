@@ -21,7 +21,11 @@ export function mergeSettings(stored) {
     minSegmentLength:
       typeof s.minSegmentLength === "number"
         ? s.minSegmentLength
-        : DEFAULT_SETTINGS.minSegmentLength
+        : DEFAULT_SETTINGS.minSegmentLength,
+    showTimelineMarkers:
+      typeof s.showTimelineMarkers === "boolean"
+        ? s.showTimelineMarkers
+        : DEFAULT_SETTINGS.showTimelineMarkers
   };
 }
 

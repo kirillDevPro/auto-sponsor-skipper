@@ -24,6 +24,7 @@
   "settings_title": { "message": "Auto Sponsor Skipper — Settings", "description": "Options page title." },
   "settings_general": { "message": "General", "description": "Options: general section heading." },
   "settings_enabled": { "message": "Enable automatic skipping", "description": "Options: master enable label." },
+  "settings_timeline_markers": { "message": "Show segment markers on the progress bar", "description": "Options: toggle for the colored skip-segment markers drawn on the video timeline." },
   "settings_categories": { "message": "Categories to skip", "description": "Options: categories heading." },
   "settings_min_length": { "message": "Minimum segment length (seconds)", "description": "Options: min length label." },
   "settings_min_length_hint": { "message": "Segments shorter than this are ignored. 0 = skip all.", "description": "Options: min length hint." },
