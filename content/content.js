@@ -16,6 +16,13 @@
                           // navigation from a same-video retry / whitelist re-eval)
   const MAX_RETRIES = 3;
 
+  /**
+   * Load and apply segments for the current navigation target.
+   * @param {string|null} videoId - YouTube video id, or null off a watch page.
+   * @param {number} [attempt=0] - transient-failure retry count.
+   * @returns {Promise<void>}
+   * @sideEffects Updates engines, clears stale UI, and may schedule a retry.
+   */
   async function onVideo(videoId, attempt = 0) {
     const myToken = ++token;
 
@@ -25,6 +32,7 @@
       lastVideoId = null;
       NS.skipEngine.clear();
       NS.timelineMarkers.clear();
+      NS.skipNotice.clear();
       return;
     }
 
@@ -42,6 +50,7 @@
       lastVideoId = videoId;
       NS.skipEngine.clear();
       NS.timelineMarkers.clear();
+      NS.skipNotice.clear();
     }
 
     NS.log("video", videoId, attempt ? "(retry " + attempt + ")" : "");

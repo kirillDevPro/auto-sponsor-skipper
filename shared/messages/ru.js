@@ -34,6 +34,7 @@ export default {
   settings_language: "Язык",
   settings_enabled: "Включить автопропуск",
   settings_timeline_markers: "Показывать метки сегментов на полосе прогресса",
+  settings_skip_notice: "Показывать уведомление о пропуске с кнопкой отмены",
   settings_categories: "Категории для пропуска",
   settings_min_length: "Минимальная длина сегмента (секунды)",
   settings_min_length_hint: "Сегменты короче этого значения игнорируются. 0 = пропускать все.",
@@ -48,6 +49,10 @@ export default {
   settings_stats_time: "Сэкономлено времени",
   settings_stats_reset: "Сбросить статистику",
   settings_saved: "Сохранено",
+
+  notice_skipped: "Пропущено",
+  notice_undo: "Отменить",
+  notice_close: "Закрыть",
 
   duration_hour_short: "ч",
   duration_minute_short: "мин",

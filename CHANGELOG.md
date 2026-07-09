@@ -2,6 +2,10 @@
 
 All notable changes to Auto Sponsor Skipper are documented here. This project follows [semantic versioning](https://semver.org/).
 
+## 1.4.0
+- A brief skip notice now appears over the player each time a segment is skipped, showing which category was skipped and an **Undo** button that jumps you back to the start of the segment (and corrects the stats). It also has a close button and fades away on its own after a few seconds.
+- New Settings toggle "Show a skip notice with an undo button" (on by default) to turn the notice off.
+
 ## 1.3.0
 - The popup now shows the current video's SponsorBlock status — how many segments the community has marked, "no segments marked yet", or a load error — for the YouTube tab you're viewing, and re-checks the moment you open it.
 - Freshly submitted segments are picked up much sooner: a video with no segments is re-checked about 90 seconds after it was last looked up (previously 12 hours).

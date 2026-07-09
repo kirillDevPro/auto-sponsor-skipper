@@ -31,6 +31,10 @@ export function mergeSettings(stored) {
       typeof s.showTimelineMarkers === "boolean"
         ? s.showTimelineMarkers
         : DEFAULT_SETTINGS.showTimelineMarkers,
+    showSkipNotice:
+      typeof s.showSkipNotice === "boolean"
+        ? s.showSkipNotice
+        : DEFAULT_SETTINGS.showSkipNotice,
     language:
       typeof s.language === "string" ? s.language : DEFAULT_SETTINGS.language
   };

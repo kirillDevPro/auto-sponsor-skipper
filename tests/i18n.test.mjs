@@ -81,6 +81,17 @@ ok(cself.__SBSKIP__.i18n.catName("__nope__") === "__nope__", "catName: unknown c
 cself.__SBSKIP__.settings = { get: () => ({ language: "ru" }) };
 ok(cself.__SBSKIP__.i18n.catName("sponsor") === ru.cat_sponsor, "catName: reads the language at call time (ru)");
 
+// --- content-tree NOTICE_STRINGS == shared/messages notice_* (deliberate duplicate) ---
+const NOTICE = cself.__SBSKIP__.NOTICE_STRINGS;
+const noticeParts = [["skipped", "notice_skipped"], ["undo", "notice_undo"], ["close", "notice_close"]];
+for (const lang of ["en", "uk", "ru"]) {
+  const mism = noticeParts.filter(([k, mk]) => NOTICE[lang][k] !== TABLES[lang][mk]).map(([k]) => k);
+  ok(mism.length === 0, "NOTICE_STRINGS " + lang + " == shared/messages notice_* (" + mism.join(",") + ")");
+}
+// notice() reads the language at call time (settings set to ru just above)
+ok(cself.__SBSKIP__.i18n.notice("undo") === ru.notice_undo, "notice(undo): reads the language at call time (ru)");
+ok(cself.__SBSKIP__.i18n.notice("skipped") === ru.notice_skipped, "notice(skipped): reads the language at call time (ru)");
+
 // --- manifest content-script ORDER (a wrong slot passes node --check but breaks at runtime) ---
 const manifest = JSON.parse(read("../manifest.json"));
 const js = manifest.content_scripts[0].js;
@@ -89,6 +100,11 @@ ok(idx("i18nStrings.js") !== -1, "manifest: i18nStrings.js present in content_sc
 ok(idx("i18nStrings.js") > idx("settingsClient.js"), "manifest: i18nStrings after settingsClient");
 ok(idx("i18nStrings.js") < idx("timelineMarkers.js"), "manifest: i18nStrings before timelineMarkers (its consumer)");
 ok(idx("i18nStrings.js") < idx("channel.js"), "manifest: i18nStrings before channel");
+ok(idx("skipNotice.js") !== -1, "manifest: skipNotice.js present in content_scripts");
+ok(idx("skipNotice.js") > idx("i18nStrings.js"), "manifest: skipNotice after i18nStrings (uses NS.i18n)");
+ok(idx("skipNotice.js") < idx("skipEngine.js"), "manifest: skipNotice before skipEngine (its caller)");
+const cssArr = manifest.content_scripts[0].css || [];
+ok(cssArr.includes("content/skipNotice.css"), "manifest: skipNotice.css injected via content_scripts css");
 
 // --- manifest __MSG_*__ references only the trimmed _locales keys ---
 const manifestText = read("../manifest.json");
@@ -166,6 +182,8 @@ ok(settingsHtml.includes('data-i18n="tab_settings"'), "settings.html: tab_settin
 ok(settingsHtml.includes('data-i18n="tab_statistics"'), "settings.html: tab_statistics label present");
 ok(settingsHtml.includes('data-panel="settings"') && settingsHtml.includes('data-panel="statistics"'),
    "settings.html: both tab panels present");
+ok(settingsHtml.includes('id="show-skip-notice"'), "settings.html: show-skip-notice toggle id present");
+ok(settingsHtml.includes('data-i18n="settings_skip_notice"'), "settings.html: settings_skip_notice label present");
 
 console.log(fails ? "FAILED" : "OK");
 process.exit(fails ? 1 : 0);

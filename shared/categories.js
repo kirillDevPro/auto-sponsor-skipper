@@ -48,6 +48,8 @@ export const DEFAULT_SETTINGS = {
   categories: Object.fromEntries(CATEGORIES.map((c) => [c.id, c.defaultOn])),
   minSegmentLength: 3,
   showTimelineMarkers: true,
+  // Show a brief "skipped — undo" notice over the player after each skip.
+  showSkipNotice: true,
   // Selected UI language for the in-page popup/options runtime (shared/i18n.js);
   // "en" default is independent of the browser locale. Not read by the SW.
   language: "en"

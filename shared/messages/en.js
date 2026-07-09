@@ -45,6 +45,7 @@ export default {
   settings_language: "Language",
   settings_enabled: "Enable automatic skipping",
   settings_timeline_markers: "Show segment markers on the progress bar",
+  settings_skip_notice: "Show a skip notice with an undo button",
   settings_categories: "Categories to skip",
   settings_min_length: "Minimum segment length (seconds)",
   settings_min_length_hint: "Segments shorter than this are ignored. 0 = skip all.",
@@ -59,6 +60,11 @@ export default {
   settings_stats_time: "Time saved",
   settings_stats_reset: "Reset statistics",
   settings_saved: "Saved",
+
+  // Skip notice (content overlay shown over the player after a skip).
+  notice_skipped: "Skipped",
+  notice_undo: "Undo",
+  notice_close: "Dismiss",
 
   // Compact duration unit labels (used by formatDuration for the stat tiles).
   duration_hour_short: "h",

@@ -14,6 +14,8 @@
  *   backward using a now-stale currentTime.
  * - The seek target is clamped just below the video duration, so a sponsor that
  *   runs to the very end is still skipped (the video then ends naturally).
+ * - After a skip, the optional skip notice is shown with an Undo callback owned
+ *   by this module: it seeks back, keeps the segment marked, and reverses stats.
  */
 
 ;(() => {
@@ -26,19 +28,33 @@
   let currentRaw = [];
   let currentWhitelisted = false;
 
-  /** True while YouTube is showing an ad (its player marks itself). */
+  /**
+   * True while YouTube is showing an ad (its player marks itself).
+   * @returns {boolean} true when an ad marker is present in the player DOM.
+   * @sideEffects None.
+   */
   function adPlaying() {
     return !!document.querySelector(
       ".ad-showing, .ytp-ad-player-overlay, .html5-video-player.ad-showing"
     );
   }
 
-  /** The active (to-skip) segments for the current video + settings + whitelist,
-   *  via the shared filter so this list always equals the drawn marker set. */
+  /**
+   * The active (to-skip) segments for the current video + settings + whitelist.
+   * Uses the shared filter so this list always equals the drawn marker set.
+   * @returns {object[]} normalized {start,end,category} segments to skip.
+   * @sideEffects None.
+   */
   function computeActive() {
     return NS.segmentFilter.filterActive(currentRaw, NS.settings.get(), currentWhitelisted);
   }
 
+  /**
+   * Seek past the first matching active segment for the timeupdate's video.
+   * @param {Event} e - video timeupdate event.
+   * @returns {void}
+   * @sideEffects Seeks the video, records stats, and may show an Undo notice.
+   */
   function onTimeUpdate(e) {
     const video = e.target;
     if (adPlaying() || activeSegments.length === 0) return;
@@ -51,10 +67,28 @@
         if (recentlySkipped.has(key)) continue;
         const target = Math.min(seg.end, dur - 0.05);
         if (target > t) {
+          const len = seg.end - seg.start;
           video.currentTime = target;
           recentlySkipped.add(key);
-          NS.skipCounter.record(seg.end - seg.start);
+          NS.skipCounter.record(len);
           NS.log("skipped", seg.category, seg.start.toFixed(1), "->", seg.end.toFixed(1));
+          if (NS.settings.get().showSkipNotice) {
+            // The engine OWNS the undo action (skipNotice is view-only): re-mark the
+            // segment so seeking back can't immediately re-skip — recentlySkipped may
+            // have been reset by an apply()/reapply() while the notice was still up —
+            // seek to the segment start, and reverse the cosmetic stat. Guard a
+            // <video> YouTube may have detached/replaced before the click. key/seg/len
+            // are per-iteration bindings, so the closure captures this skip's values.
+            NS.skipNotice.show({
+              category: seg.category,
+              onUndo() {
+                if (!video || !video.isConnected) return;
+                recentlySkipped.add(key);
+                video.currentTime = seg.start;
+                NS.skipCounter.unrecord(len);
+              }
+            });
+          }
           break; // re-evaluate from the new position on the next timeupdate
         }
       }
@@ -67,6 +101,8 @@
      * @param {HTMLVideoElement|null} video
      * @param {object[]} rawSegments - normalized {start,end,category}[]
      * @param {{whitelisted?: boolean}} [opts]
+     * @returns {void}
+     * @sideEffects Resets active skip state and may bind a video timeupdate listener.
      */
     apply(video, rawSegments, opts = {}) {
       currentRaw = rawSegments || [];
@@ -79,13 +115,21 @@
       }
     },
 
-    /** Recompute the active list after a live settings change (no rebind). */
+    /**
+     * Recompute the active list after a live content-relevant settings change.
+     * @returns {void}
+     * @sideEffects Resets the per-segment skip cooldown.
+     */
     reapply() {
       recentlySkipped = new Set();
       activeSegments = computeActive();
     },
 
-    /** Drop all segments (e.g. when the tab leaves a watch page). */
+    /**
+     * Drop all segments (e.g. when the tab leaves a watch page).
+     * @returns {void}
+     * @sideEffects Resets active skip state.
+     */
     clear() {
       currentRaw = [];
       currentWhitelisted = false;

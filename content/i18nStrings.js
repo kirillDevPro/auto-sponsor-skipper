@@ -1,8 +1,8 @@
 /**
- * content/i18nStrings.js — the classic content tree's tiny localization table:
- * the SponsorBlock category display names, in every shipped UI language, for the
- * timeline-marker hover tooltip (the only localized string in the content tree —
- * timelineGeometry.formatLength is numeric M:SS, language-neutral).
+ * content/i18nStrings.js — the classic content tree's tiny localization tables:
+ * the SponsorBlock category display names (for the timeline-marker hover tooltip)
+ * and the skip-notice strings (for content/skipNotice.js), in every shipped UI
+ * language. timelineGeometry.formatLength is numeric M:SS, language-neutral.
  *
  * Content scripts are classic (no ES imports) and cannot pull shared/i18n.js, so
  * this is a DELIBERATE duplicate of the cat_* messages in shared/messages/<lang>.js
@@ -50,22 +50,51 @@
     }
   };
 
+  // Skip-notice strings for the content overlay (content/skipNotice.js). Deliberate
+  // duplicate of the notice_* keys in shared/messages/<lang>.js (the classic tree
+  // can't import the module) — keep byte-consistent, like NS.CAT_NAMES.
+  // tests/i18n.test.mjs asserts NS.NOTICE_STRINGS[lang][k] === shared/messages[lang]["notice_"+k].
+  NS.NOTICE_STRINGS = {
+    en: { skipped: "Skipped", undo: "Undo", close: "Dismiss" },
+    uk: { skipped: "Пропущено", undo: "Скасувати", close: "Закрити" },
+    ru: { skipped: "Пропущено", undo: "Отменить", close: "Закрыть" }
+  };
+
+  /**
+   * The current UI language from NS.settings at call time, fail-open to "en".
+   * Tolerates NS.settings not being ready yet (never throws in the content path).
+   * @returns {string} the selected language code, or "en".
+   * @sideEffects None.
+   */
+  function currentLang() {
+    const s = NS.settings && typeof NS.settings.get === "function" ? NS.settings.get() : null;
+    return (s && s.language) || "en";
+  }
+
   NS.i18n = {
     /**
      * Localized display name for a category id, by the current UI language.
-     * Reads NS.settings at call time (falls back to NS.DEFAULTS -> "en"), so a
-     * live language change applies on the next hover. Falls back en, then raw id.
+     * Reads NS.settings at call time (falls back to "en"), so a live language
+     * change applies on the next use. Falls back en, then the raw id.
      * @param {string} cat - a SponsorBlock category id.
      * @returns {string} localized display name, or the raw category id.
      * @sideEffects None.
      */
     catName(cat) {
-      // Fail-open, like the rest of the content tree: tolerate NS.settings not
-      // being ready yet (never throw inside the tooltip path) — default to en.
-      const s = NS.settings && typeof NS.settings.get === "function" ? NS.settings.get() : null;
-      const lang = (s && s.language) || "en";
-      const table = NS.CAT_NAMES[lang] || NS.CAT_NAMES.en;
+      const table = NS.CAT_NAMES[currentLang()] || NS.CAT_NAMES.en;
       return table[cat] || cat;
+    },
+
+    /**
+     * A localized skip-notice string, by the current UI language, fail-open to "en".
+     * Mirrors catName's parametrized shape so a new notice string needs no new method.
+     * @param {"skipped"|"undo"|"close"} key
+     * @returns {string} the localized string.
+     * @sideEffects None.
+     */
+    notice(key) {
+      const table = NS.NOTICE_STRINGS[currentLang()] || NS.NOTICE_STRINGS.en;
+      return table[key];
     }
   };
 })();

@@ -1,0 +1,70 @@
+/* ============================================
+   SKIP NOTICE toast — injected on YouTube watch pages via manifest
+   content_scripts[].css (exempt from the page CSP; no web_accessible_resources
+   and no extra permission). content/skipNotice.js appends it to #movie_player so
+   it stays visible in fullscreen (which shows only the player subtree).
+
+   MD3 dark tokens are copied from the :root blocks in settings/settings.css /
+   popup/popup.css (content CSS can't import them) — KEEP IN SYNC with those token
+   blocks, exactly like content/timeline.css:
+     surface-container        #2D2D31
+     on-surface               #ECECEF
+     primary (accent)         #60A5FA
+     on-primary (btn text)    #0B1220
+   ============================================ */
+
+/* The toast: bottom-left of the player, above the control bar. */
+.sbskip-notice {
+  position: absolute;
+  left: 12px;
+  bottom: 70px;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 60%;
+  padding: 8px 10px 8px 14px;
+  border-radius: 10px;
+  border: 1px solid #60A5FA; /* --md-sys-color-primary */
+  background-color: #2D2D31; /* --md-sys-color-surface-container */
+  color: #ECECEF; /* --md-sys-color-on-surface */
+  font-family: 'Roboto', 'Arial', sans-serif;
+  font-size: 13px;
+  line-height: 1.4;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.55);
+  opacity: 0.97;
+}
+
+.sbskip-notice-label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Undo: a pill button matching the MD3 primary buttons. */
+.sbskip-notice-undo {
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding: 4px 12px;
+  border: none;
+  border-radius: 9999px;
+  background-color: #60A5FA; /* --md-sys-color-primary */
+  color: #0B1220; /* --md-sys-color-on-primary */
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Close: a quiet × affordance. */
+.sbskip-notice-close {
+  flex: 0 0 auto;
+  cursor: pointer;
+  padding: 0 4px;
+  border: none;
+  background: transparent;
+  color: #ECECEF; /* --md-sys-color-on-surface */
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1;
+  opacity: 0.8;
+}

@@ -27,6 +27,8 @@
         typeof s.showTimelineMarkers === "boolean"
           ? s.showTimelineMarkers
           : d.showTimelineMarkers,
+      showSkipNotice:
+        typeof s.showSkipNotice === "boolean" ? s.showSkipNotice : d.showSkipNotice,
       language: typeof s.language === "string" ? s.language : d.language
     };
   }
@@ -73,11 +75,11 @@
   };
 
   /**
-   * True if a field the content script acts on changed (skip logic or timeline
-   * markers). `language` is UI-only; the tooltip reads it live via
-   * NS.i18n.catName, so a language-only change must not trigger a reapply, which
-   * resets the skip cooldown and could re-skip a segment the user scrubbed back
-   * into. Compares against the previously cached settings, not the change record.
+   * True if a field that changes skipping or marker rendering changed.
+   * `language` and `showSkipNotice` are read live by their UI paths, so toggling
+   * either must not trigger a reapply that resets the skip cooldown and could
+   * re-skip a segment the user scrubbed back into. Compares against the
+   * previously cached settings, not the change record.
    * @param {object|null} prev - previous cached settings.
    * @param {object} next - newly merged settings.
    * @returns {boolean} true when skip logic or marker rendering should reapply.
@@ -102,6 +104,14 @@
       cache = merge(changes[NS.STORAGE.SETTINGS_KEY].newValue);
       if (typeof NS.onSettingsChanged === "function" && affectsContent(prev, cache)) {
         NS.onSettingsChanged(cache);
+      }
+      // showSkipNotice is intentionally NOT in affectsContent (toggling it must not
+      // reset the skip cooldown — it's read live at skip time). But turning it OFF
+      // should hide a notice that's currently on screen; do that without a reapply.
+      // (Guarded because this early-loaded module can fire before skipNotice.js in
+      // the rare change-during-injection window.)
+      if (prev && prev.showSkipNotice && !cache.showSkipNotice && NS.skipNotice) {
+        NS.skipNotice.clear();
       }
     }
     // The whitelist lives in local storage; a change must re-evaluate the

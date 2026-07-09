@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "__MSG_extDescription__",
   "default_locale": "en",
   "permissions": ["storage", "activeTab"],
@@ -43,11 +43,12 @@
         "content/skipCounter.js",
         "content/segmentFilter.js",
         "content/timelineGeometry.js",
+        "content/skipNotice.js",
         "content/skipEngine.js",
         "content/timelineMarkers.js",
         "content/content.js"
       ],
-      "css": ["content/timeline.css"],
+      "css": ["content/timeline.css", "content/skipNotice.css"],
       "run_at": "document_idle",
       "all_frames": false
     }

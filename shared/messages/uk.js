@@ -34,6 +34,7 @@ export default {
   settings_language: "Мова",
   settings_enabled: "Увімкнути автопропуск",
   settings_timeline_markers: "Показувати позначки сегментів на смузі прогресу",
+  settings_skip_notice: "Показувати сповіщення про пропуск із кнопкою скасування",
   settings_categories: "Категорії для пропуску",
   settings_min_length: "Мінімальна довжина сегмента (секунди)",
   settings_min_length_hint: "Сегменти, коротші за це значення, ігноруються. 0 = пропускати всі.",
@@ -48,6 +49,10 @@ export default {
   settings_stats_time: "Заощаджено часу",
   settings_stats_reset: "Скинути статистику",
   settings_saved: "Збережено",
+
+  notice_skipped: "Пропущено",
+  notice_undo: "Скасувати",
+  notice_close: "Закрити",
 
   duration_hour_short: "год",
   duration_minute_short: "хв",

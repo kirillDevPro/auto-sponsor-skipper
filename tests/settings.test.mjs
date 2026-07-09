@@ -18,6 +18,13 @@ ok(
   "shared: survives a read-fresh re-merge (write-back round-trip)"
 );
 
+// --- shared: showSkipNotice survives the same read-fresh merge paths ---
+ok(DEFAULT_SETTINGS.showSkipNotice === true, "DEFAULT_SETTINGS.showSkipNotice default is true");
+ok(mergeSettings({}).showSkipNotice === true, "shared: absent showSkipNotice -> default true");
+ok(mergeSettings({ showSkipNotice: false }).showSkipNotice === false, "shared: showSkipNotice false preserved");
+ok(mergeSettings({ enabled: false }).showSkipNotice === true, "shared: other-field write keeps showSkipNotice default");
+ok(mergeSettings(mergeSettings({ showSkipNotice: false })).showSkipNotice === false, "shared: showSkipNotice survives a read-fresh re-merge");
+
 // --- shared: the language field survives the same read-fresh merge paths ---
 ok(DEFAULT_SETTINGS.language === "en", "DEFAULT_SETTINGS.language default is en");
 ok(mergeSettings({}).language === "en", "shared: absent language -> default en");
@@ -55,6 +62,14 @@ ok(self.__SBSKIP__.settings.get().showTimelineMarkers === false, "content: store
 syncStore["settings"] = { enabled: false }; // partial object missing the flag
 await self.__SBSKIP__.settings.load();
 ok(self.__SBSKIP__.settings.get().showTimelineMarkers === true, "content: partial settings -> default true");
+
+syncStore["settings"] = { showSkipNotice: false };
+await self.__SBSKIP__.settings.load();
+ok(self.__SBSKIP__.settings.get().showSkipNotice === false, "content: stored showSkipNotice false preserved");
+
+syncStore["settings"] = { enabled: false }; // partial object, missing showSkipNotice
+await self.__SBSKIP__.settings.load();
+ok(self.__SBSKIP__.settings.get().showSkipNotice === true, "content: partial settings -> showSkipNotice default true");
 
 // content: the language field, same merge path
 syncStore["settings"] = { language: "ru" };
@@ -102,6 +117,20 @@ ok(self.__SBSKIP__.settings.get().language === "en", "content: partial settings 
 
   fire({ ...base, language: "ru", enabled: false, categories: { ...base.categories, sponsor: false }, showTimelineMarkers: false });
   ok(fired === 3, "content: showTimelineMarkers change reapplies");
+
+  // showSkipNotice is read live at skip time, NOT via affectsContent — a change to
+  // it must update the cache but NOT reapply (which would reset the skip cooldown).
+  // Turning it OFF while a notice is on screen hides that notice via a direct
+  // skipNotice.clear() (no reapply); turning it ON clears nothing.
+  let noticeCleared = 0;
+  self2.__SBSKIP__.skipNotice = { clear: () => { noticeCleared++; } };
+  fire({ ...base, language: "ru", enabled: false, categories: { ...base.categories, sponsor: false }, showTimelineMarkers: false, showSkipNotice: false });
+  ok(fired === 3, "content: showSkipNotice change does NOT reapply (not in affectsContent)");
+  ok(self2.__SBSKIP__.settings.get().showSkipNotice === false, "content: cache still updates showSkipNotice");
+  ok(noticeCleared === 1, "content: turning showSkipNotice OFF clears the on-screen notice");
+
+  fire({ ...base, language: "ru", enabled: false, categories: { ...base.categories, sponsor: false }, showTimelineMarkers: false, showSkipNotice: true });
+  ok(noticeCleared === 1, "content: turning showSkipNotice ON does not call clear()");
 }
 
 console.log(fails ? "FAILED" : "OK");

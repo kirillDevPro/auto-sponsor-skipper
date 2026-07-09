@@ -1,7 +1,7 @@
 /**
  * settings/global.js — the General + Categories sections of the options page:
- * the master enable toggle, the timeline-marker toggle, the
- * minimum-segment-length input, and the per-category checkboxes.
+ * the master enable toggle, timeline-marker toggle, skip-notice toggle,
+ * language selector, minimum-segment-length input, and per-category checkboxes.
  *
  * options_ui uses open_in_tab, so this page can live for a long time. Every
  * write is a read-fresh-modify-write via updateSettings so it can't clobber a
@@ -36,6 +36,7 @@ export async function initGlobal() {
   const langEl = document.getElementById("ui-language");
   const enabledEl = document.getElementById("enabled");
   const markersEl = document.getElementById("show-timeline-markers");
+  const noticeEl = document.getElementById("show-skip-notice");
   const minEl = document.getElementById("min-length");
   const catsEl = document.getElementById("categories");
 
@@ -51,6 +52,7 @@ export async function initGlobal() {
     if (active !== langEl) langEl.value = settings.language;
     if (active !== enabledEl) enabledEl.checked = settings.enabled;
     if (active !== markersEl) markersEl.checked = settings.showTimelineMarkers;
+    if (active !== noticeEl) noticeEl.checked = settings.showSkipNotice;
     if (active !== minEl) minEl.value = String(settings.minSegmentLength || 0);
     for (const cat of CATEGORIES) {
       const input = document.getElementById("cat-" + cat.id);
@@ -87,6 +89,14 @@ export async function initGlobal() {
   markersEl.addEventListener("change", async () => {
     settings = await updateSettings((s) => {
       s.showTimelineMarkers = markersEl.checked;
+    });
+    flashSaved();
+  });
+
+  noticeEl.checked = settings.showSkipNotice;
+  noticeEl.addEventListener("change", async () => {
+    settings = await updateSettings((s) => {
+      s.showSkipNotice = noticeEl.checked;
     });
     flashSaved();
   });

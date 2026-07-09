@@ -39,6 +39,7 @@
     },
     minSegmentLength: 3,
     showTimelineMarkers: true,
+    showSkipNotice: true,
     language: "en"
   };
 
@@ -67,6 +68,7 @@
    * check→call race) so an orphaned tab degrades silently until a navigation or
    * reload injects a fresh script. Skipping itself is pure DOM and is unaffected.
    * @returns {boolean}
+   * @sideEffects None.
    */
   NS.contextAlive = () => {
     try {
