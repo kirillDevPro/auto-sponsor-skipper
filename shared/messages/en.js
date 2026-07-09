@@ -31,6 +31,12 @@ export default {
   popup_time_saved: "Time saved",
   popup_open_settings: "More settings",
 
+  // Current-video status line (popup, active YouTube tab).
+  popup_status_marked: "Segments marked:",
+  popup_status_none: "No segments marked yet",
+  popup_status_error: "Couldn't load segment data",
+  popup_status_checking: "Checking…",
+
   // Options page.
   settings_title: "Auto Sponsor Skipper — Settings",
   tab_settings: "Settings",

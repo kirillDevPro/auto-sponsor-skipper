@@ -8,10 +8,8 @@
  * the `unlimitedStorage` permission.
  */
 
-import { CACHE_PREFIX, CACHE_MAX_ENTRIES, TTL_MS } from "./constants.js";
-
-/** @returns {string} storage key for a video's cache entry. */
-const keyFor = (videoId) => CACHE_PREFIX + videoId;
+import { CACHE_MAX_ENTRIES } from "./constants.js";
+import { CACHE_PREFIX, cacheKey, isFresh } from "../shared/videoCache.js";
 
 /**
  * @typedef {{ videoId: string, fetchedAt: number,
@@ -25,13 +23,9 @@ const keyFor = (videoId) => CACHE_PREFIX + videoId;
  * @returns {Promise<CacheEntry|null>}
  */
 export async function getCached(videoId, now) {
-  const k = keyFor(videoId);
+  const k = cacheKey(videoId);
   const obj = await chrome.storage.local.get(k);
-  const entry = obj[k];
-  if (!entry) return null;
-  const ttl = TTL_MS[entry.status] ?? TTL_MS.error;
-  if (now - entry.fetchedAt > ttl) return null; // stale → treat as miss
-  return entry;
+  return isFresh(obj[k], now) ? obj[k] : null; // stale/missing → treat as miss
 }
 
 /**
@@ -44,7 +38,7 @@ export async function getCached(videoId, now) {
  */
 export async function setCached(videoId, status, segments, now) {
   const entry = { videoId, fetchedAt: now, status, segments: segments || [] };
-  await chrome.storage.local.set({ [keyFor(videoId)]: entry });
+  await chrome.storage.local.set({ [cacheKey(videoId)]: entry });
   await pruneIfNeeded();
   return entry;
 }

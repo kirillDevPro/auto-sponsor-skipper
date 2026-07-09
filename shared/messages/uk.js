@@ -22,6 +22,11 @@ export default {
   popup_time_saved: "Заощаджено",
   popup_open_settings: "Більше налаштувань",
 
+  popup_status_marked: "Розмічено сегментів:",
+  popup_status_none: "Сегментів ще не розмічено",
+  popup_status_error: "Не вдалося завантажити дані",
+  popup_status_checking: "Перевірка…",
+
   settings_title: "Auto Sponsor Skipper — Налаштування",
   tab_settings: "Налаштування",
   tab_statistics: "Статистика",

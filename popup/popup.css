@@ -133,6 +133,18 @@ h2 {
   letter-spacing: 0.08em;
 }
 
+/* === VIDEO STATUS LINE (current tab's SponsorBlock status) === */
+.video-status {
+  background-color: var(--md-sys-color-surface-container);
+  border: 1px solid var(--md-sys-color-outline-variant);
+  border-radius: var(--md-sys-shape-corner-medium);
+  box-shadow: var(--md-sys-elevation-1);
+  margin: 0;
+  padding: 8px 12px;
+  font-size: 0.8125rem;
+  color: var(--md-sys-color-on-surface-variant);
+}
+
 /* === CATEGORIES CARD === */
 #categories {
   background-color: var(--md-sys-color-surface-container);

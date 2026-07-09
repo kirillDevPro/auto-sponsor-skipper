@@ -58,4 +58,21 @@
 
   /** Namespaced debug logger (visible in the page console under a filter). */
   NS.log = (...args) => console.debug("[AutoSponsorSkipper]", ...args);
+
+  /**
+   * True while this content script's extension context is still valid. After the
+   * extension is reloaded or updated, an already-injected content script is
+   * orphaned and every chrome.* call throws "Extension context invalidated".
+   * Storage/messaging callers check this first (and still try/catch the
+   * check→call race) so an orphaned tab degrades silently until a navigation or
+   * reload injects a fresh script. Skipping itself is pure DOM and is unaffected.
+   * @returns {boolean}
+   */
+  NS.contextAlive = () => {
+    try {
+      return !!(chrome.runtime && chrome.runtime.id);
+    } catch {
+      return false;
+    }
+  };
 })();

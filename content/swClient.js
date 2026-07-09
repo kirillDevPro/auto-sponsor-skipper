@@ -3,9 +3,9 @@
  *
  * Wraps chrome.runtime.sendMessage with retry + backoff. A suspended MV3 worker
  * is woken by the message itself; if a wake genuinely fails (undefined response
- * or chrome.runtime.lastError) we retry a few times before giving up. This is
- * the runtime guarantee behind "SW death never breaks skipping": the content
- * script keeps asking until the worker answers.
+ * or chrome.runtime.lastError) we retry a few times before giving up. An
+ * orphaned content script short-circuits before messaging, because every
+ * chrome.* call would throw after the extension context is invalidated.
  */
 
 ;(() => {
@@ -14,7 +14,12 @@
   /** Per-attempt cap: if the SW accepts the message but never responds, don't hang. */
   const ATTEMPT_TIMEOUT_MS = 10000;
 
-  /** One sendMessage attempt, resolving to the response or an {ok:false} error. */
+  /**
+   * Send one runtime message attempt.
+   * @param {object} msg - message payload sent to the service worker.
+   * @returns {Promise<object>} service-worker response, or an {ok:false} error.
+   * @sideEffects Sends a chrome.runtime message and starts a per-attempt timer.
+   */
   function sendOnce(msg) {
     return new Promise((resolve) => {
       let settled = false;
@@ -49,6 +54,9 @@
    * @returns {Promise<{ok:boolean, status?:string, segments?:object[], error?:string}>}
    */
   NS.getSegments = async function (videoId, { attempts = 4 } = {}) {
+    // An orphaned content script (extension reloaded/updated) can't reach the SW;
+    // skip the futile retries and let the caller treat it as a transient failure.
+    if (!NS.contextAlive()) return { ok: false, error: "context invalidated", segments: [] };
     let delay = 300;
     for (let i = 0; i < attempts; i++) {
       const resp = await sendOnce({ type: NS.MSG.GET_SEGMENTS, videoId });

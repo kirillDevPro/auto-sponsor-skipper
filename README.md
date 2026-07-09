@@ -43,8 +43,9 @@ No remote code is loaded or executed — the service worker fetches JSON **data*
 | `storage` | Save your settings, a per-video segment cache, and the skip counter locally. |
 | host `https://sponsor.ajay.app/*` | Fetch community skip segments for the current video. This is the **only** network host. |
 | content script on `https://www.youtube.com/*` | Read the player's current time to seek past segments; read the channel id for the optional whitelist. |
+| `activeTab` | When you open the popup, read the active tab's URL once to show that YouTube video's segment status. No script injection, no standing host access. Chrome grants this temporary access on invocation and revokes it on tab navigation or close; the code only reads the URL at popup startup. |
 
-Not requested: `tabs`, `activeTab`, `history`, `alarms`, `scripting`, `unlimitedStorage`, or any broad host permission.
+Not requested: `tabs`, `history`, `alarms`, `scripting`, `unlimitedStorage`, or any broad host permission.
 
 ## Install
 ### From the Chrome Web Store (recommended)

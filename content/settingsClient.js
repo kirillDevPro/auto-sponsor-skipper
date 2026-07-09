@@ -52,12 +52,23 @@
     },
     /**
      * Read the channel whitelist array from local storage.
-     * @returns {Promise<string[]>} stored whitelist, or an empty array.
+     * @returns {Promise<string[]>} stored whitelist, [] only after context death.
      * @sideEffects Reads chrome.storage.local.
      */
     async whitelist() {
-      const obj = await chrome.storage.local.get(NS.STORAGE.WHITELIST_KEY);
-      return obj[NS.STORAGE.WHITELIST_KEY] || [];
+      // Runs on every navigation, which can happen in an orphaned content script
+      // (extension reloaded/updated); degrade to "no whitelist" ONLY for context
+      // death. A genuine storage failure on a live context is rethrown so the
+      // orchestrator fails closed (bails before apply → no skipping) instead of
+      // skipping on a channel the user explicitly whitelisted.
+      if (!NS.contextAlive()) return [];
+      try {
+        const obj = await chrome.storage.local.get(NS.STORAGE.WHITELIST_KEY);
+        return obj[NS.STORAGE.WHITELIST_KEY] || [];
+      } catch (e) {
+        if (!NS.contextAlive()) return []; // context died mid-call → orphaned tab
+        throw e; // genuine storage failure → let the caller fail closed
+      }
     }
   };
 

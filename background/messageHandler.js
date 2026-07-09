@@ -9,7 +9,7 @@
  */
 
 import { getSegments } from "./segmentService.js";
-import { MSG_GET_SEGMENTS } from "./constants.js";
+import { MSG_GET_SEGMENTS } from "../shared/messaging.js";
 
 /** Register the GET_SEGMENTS handler. Call once at service-worker startup. */
 export function registerMessageHandler() {

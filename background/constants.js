@@ -1,6 +1,8 @@
 /**
  * background/constants.js — service-worker-side constants for the SponsorBlock
- * fetch proxy: API endpoint, hashing, and the local segment cache policy.
+ * fetch proxy: API endpoint, hashing, timeouts, and the cache cap. The per-video
+ * cache KEY and TTL policy live in shared/videoCache.js and the content/popup ↔
+ * SW message protocol in shared/messaging.js (both shared with the popup).
  */
 
 /** Base URL of the SponsorBlock skip-segments endpoint. */
@@ -18,19 +20,5 @@ export const ACTION_TYPE = "skip";
 /** Abort the API fetch after this many ms so a hung request can't wedge the pipeline. */
 export const API_TIMEOUT_MS = 8000;
 
-/** chrome.storage.local key prefix for one cache entry per video. */
-export const CACHE_PREFIX = "sbseg_";
-
 /** Max number of cached videos kept before oldest-first pruning. */
 export const CACHE_MAX_ENTRIES = 1000;
-
-/** Cache TTL per result status, in milliseconds. */
-export const TTL_MS = {
-  found: 7 * 24 * 60 * 60 * 1000, // 7 days — segments are stable
-  empty: 12 * 60 * 60 * 1000,     // 12 hours — a video may gain its first segment
-  error: 30 * 1000                // 30 seconds — short enough that a content-side
-                                  // retry re-fetches, small enough to stay polite
-};
-
-/** Message protocol type used by the content script. */
-export const MSG_GET_SEGMENTS = "GET_SEGMENTS";
