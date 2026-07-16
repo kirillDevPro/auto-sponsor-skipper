@@ -15,6 +15,7 @@ export default {
   cat_preview: "Прев'ю / короткий огляд",
   cat_filler: "Вода / відступ від теми",
   cat_music_offtopic: "Немузичний фрагмент",
+  cat_hook: "Гачок / вітання",
 
   popup_enabled: "Пропуск увімкнено",
   popup_categories: "Пропускати ці сегменти",
@@ -22,8 +23,12 @@ export default {
   popup_time_saved: "Заощаджено",
   popup_open_settings: "Більше налаштувань",
 
-  popup_status_marked: "Розмічено сегментів:",
+  popup_status_will_skip: "Буде пропущено:",
+  popup_status_off: "Пропуск вимкнено",
+  popup_status_whitelisted: "Канал у білому списку",
   popup_status_none: "Сегментів ще не розмічено",
+  popup_status_too_short: "Увімкнені сегменти коротші за мінімальну довжину",
+  popup_status_category_off: "Ці категорії сегментів вимкнено",
   popup_status_error: "Не вдалося завантажити дані",
   popup_status_checking: "Перевірка…",
 

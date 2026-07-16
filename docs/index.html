@@ -45,7 +45,7 @@
 <body>
 <main>
   <h1>Auto Sponsor Skipper — Privacy Policy</h1>
-  <p class="updated">Last updated: 6 July 2026</p>
+  <p class="updated">Last updated: 16 July 2026</p>
   <p class="lead">Auto Sponsor Skipper is a Chrome extension that automatically skips community-submitted segments on YouTube. It is built to need as little of your data as possible. This page explains exactly what it does and does not do with data.</p>
 
   <h2>The short version</h2>
@@ -62,12 +62,12 @@
   <h2>What is stored, and where</h2>
   <ul>
     <li><strong>Settings</strong> (which categories to skip, minimum segment length) are stored in <code>chrome.storage.sync</code>. If you have Chrome Sync enabled, Chrome syncs them across your signed-in browsers; otherwise they stay on this device. This is handled by Chrome, not by us.</li>
-    <li><strong>The segment cache, statistics, and the channel whitelist</strong> are stored in <code>chrome.storage.local</code> and <strong>stay on this device only</strong> — they are never transmitted.</li>
+    <li><strong>The segment cache, statistics, the channel whitelist, and a small per-video record of whether the current channel is whitelisted</strong> (so the popup can show why a video is or isn't being skipped) are stored in <code>chrome.storage.local</code> and <strong>stay on this device only</strong> — they are never transmitted.</li>
   </ul>
 
   <h2>Data retention and deletion</h2>
   <ul>
-    <li>Cached segments expire automatically (about 7 days for found segments, 90 seconds when a video has none, 30 seconds after a lookup error) and the cache is capped in size, oldest entries pruned first.</li>
+    <li>Cached segments expire automatically (about 7 days for found segments, 90 seconds when a video has none, 30 seconds after a lookup error); the segment cache and the per-video whitelist records are each capped in size, oldest entries pruned first.</li>
     <li>You can reset the statistics at any time from the extension's options page, and remove any channel from the whitelist there.</li>
     <li><strong>Uninstalling the extension</strong> removes all of its local data from your browser.</li>
   </ul>

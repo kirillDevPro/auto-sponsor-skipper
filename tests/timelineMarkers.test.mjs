@@ -47,6 +47,11 @@ ok(markers[1].startPct === 30 && markers[1].widthPct === 10, "selfpromo spans 30
 ok(markers[0].color === "#00d400", "sponsor color from the single source");
 ok(markers[0].length === 10, "length carried for the tooltip");
 
+// --- hook: enabling it draws a marker in the canonical hook color, proving the
+// content-tree color is wired end-to-end (a missing color would silently drop it) ---
+const hookMarkers = compute([{ start: 10, end: 30, category: "hook" }], { ...settings, categories: { hook: true } }, false, dur);
+ok(hookMarkers.length === 1 && hookMarkers[0].color === "#395699", "hook enabled -> one marker in #395699");
+
 // --- gates that must CLEAR (return []) ---
 ok(compute(raw, { ...settings, showTimelineMarkers: false }, false, dur).length === 0, "markers off -> []");
 ok(compute(raw, settings, true, dur).length === 0, "whitelisted -> []");

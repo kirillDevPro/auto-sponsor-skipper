@@ -17,6 +17,41 @@
   const MAX_RETRIES = 3;
 
   /**
+   * Persist (or clear) the popup-facing whitelist decision for a video. Passing
+   * `null` REMOVES the record so the popup falls back to "checking" instead of
+   * trusting a now-stale decision. Fire-and-forget and context-guarded: an
+   * asynchronous write rejection drops any prior record, while a synchronous
+   * storage error or orphaned context is logged or ignored without stopping skips.
+   * @param {string} videoId
+   * @param {boolean|null} whitelisted - the enforced decision, or null to clear.
+   * @returns {void}
+   * @sideEffects Writes or removes one chrome.storage.local key.
+   */
+  function writeWlRecord(videoId, whitelisted) {
+    if (!NS.contextAlive()) return;
+    const key = NS.STORAGE.WL_PREFIX + videoId;
+    const drop = () => {
+      try {
+        const r = chrome.storage.local.remove(key);
+        if (r && typeof r.catch === "function") r.catch(() => {});
+      } catch { /* orphaned context — nothing to clean up */ }
+    };
+    try {
+      if (whitelisted === null) {
+        drop();
+        return;
+      }
+      const p = chrome.storage.local.set({ [key]: { videoId, whitelisted, fetchedAt: Date.now() } });
+      // A failed stamp must not leave a prior (now-wrong) decision authoritative — even on
+      // the same-video re-eval path, where the navigation invalidate did not run. Drop the
+      // record on rejection so the popup falls back to "checking", never the opposite verdict.
+      if (p && typeof p.catch === "function") p.catch(drop);
+    } catch (e) {
+      NS.log("wl-record write error", e);
+    }
+  }
+
+  /**
    * Load and apply segments for the current navigation target.
    * @param {string|null} videoId - YouTube video id, or null off a watch page.
    * @param {number} [attempt=0] - transient-failure retry count.
@@ -51,6 +86,11 @@
       NS.skipEngine.clear();
       NS.timelineMarkers.clear();
       NS.skipNotice.clear();
+      // Drop the previous whitelist decision for the video we are navigating TO so
+      // the popup shows "checking" until this pass re-stamps a fresh one — a stale
+      // record (e.g. the channel was whitelisted elsewhere since the last visit)
+      // must never read as the current, authoritative decision.
+      writeWlRecord(videoId, null);
     }
 
     NS.log("video", videoId, attempt ? "(retry " + attempt + ")" : "");
@@ -76,6 +116,13 @@
       NS.skipEngine.apply(video, segments, { whitelisted });
       NS.timelineMarkers.render(video, segments, { whitelisted });
       NS.log("applied", segments.length, "segments; whitelisted:", whitelisted);
+
+      // Publish the whitelist decision for the popup ONLY when a real <video> was
+      // bound — apply() attaches the timeupdate listener only for a truthy video, so
+      // with no player enforcement is inert. Leave the record cleared (popup stays
+      // "checking") rather than claiming a decision nothing is acting on. Keyed by
+      // video, disjoint from the SW's sbseg_ cache; fire-and-forget.
+      if (video) writeWlRecord(videoId, whitelisted);
 
       // Transient failure — either a fetch error, or the service worker was
       // unreachable after swClient exhausted its fast retries. Self-heal on a

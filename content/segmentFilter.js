@@ -7,6 +7,11 @@
  * draw these) call this ONE function, so the marker set is definitionally equal
  * to the skipped set — they can never drift apart.
  *
+ * This is a DELIBERATE duplicate of shared/segmentFilter.js filterActive (the
+ * classic content tree can't import the module tree) — the module copy is what the
+ * popup's honest status line runs. Keep the two behaviorally identical; their
+ * active sets and ordering are pinned by tests/segmentFilter.test.mjs.
+ *
  * Pure and load-safe: no `document`, no `chrome`, no DOM. That keeps it
  * headlessly testable and lets it load before any other content module needs it.
  */

@@ -1,17 +1,27 @@
 /**
- * shared/videoCache.js — single source of truth for the per-video SponsorBlock
- * segment cache key and its time-to-live policy.
+ * shared/videoCache.js — single source of truth for the per-video keys the popup
+ * reads from chrome.storage.local: the SponsorBlock segment cache (key + TTL) and
+ * the whitelist-decision record.
  *
- * The service worker WRITES these cache entries (background/cache.js) and the
- * popup READS them (popup/popup.js) to show the current video's status, so the
- * key format and TTL must agree across both. Both are ES-module trees that may
- * import shared/, so this is their one shared definition — no duplication.
+ * The service worker WRITES the segment cache (background/cache.js); the content
+ * script WRITES the whitelist-decision record (content/content.js); the popup
+ * READS both (popup/popup.js) for the current video's status line, so the key
+ * formats must agree across all three. The classic content tree can't import this
+ * module, so it duplicates the WL prefix in content/config.js NS.STORAGE.
  *
  * Pure: no chrome, no DOM — headlessly testable and safe to import anywhere.
  */
 
-/** chrome.storage.local key prefix for one cache entry per video. */
+/** chrome.storage.local key prefix for one segment-cache entry per video. */
 export const CACHE_PREFIX = "sbseg_";
+
+/**
+ * chrome.storage.local key prefix for one whitelist-decision record per video:
+ * { videoId, whitelisted, fetchedAt }. Written by the content script (the enforcer),
+ * read by the popup so its status line reports the SAME decision skipping used.
+ * Disjoint from CACHE_PREFIX — the SW's setCached fully overwrites its own entry.
+ */
+export const WL_PREFIX = "sbwl_";
 
 /** Cache TTL per result status, in milliseconds. */
 export const TTL_MS = {
@@ -31,6 +41,14 @@ export const TTL_MS = {
  */
 export function cacheKey(videoId) {
   return CACHE_PREFIX + videoId;
+}
+
+/**
+ * @param {string} videoId
+ * @returns {string} the storage key for a video's recorded whitelist decision.
+ */
+export function wlKey(videoId) {
+  return WL_PREFIX + videoId;
 }
 
 /**

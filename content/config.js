@@ -8,9 +8,9 @@
  * global scope. Each module is wrapped in an IIFE so its locals don't collide,
  * and attaches its public surface to __SBSKIP__.
  *
- * DEFAULTS and CATEGORY_COLORS below deliberately duplicate shared/categories.js
- * DEFAULT_SETTINGS and CATEGORY_COLORS (the module tree can't be imported here)
- * - keep both pairs in sync.
+ * DEFAULTS and CATEGORY_COLORS below deliberately duplicate shared/categories.js;
+ * STORAGE.WL_PREFIX duplicates shared/videoCache.js. The module tree can't be
+ * imported here, so keep all three definitions in sync with their shared twins.
  */
 
 ;(() => {
@@ -19,9 +19,13 @@
   NS.MSG = { GET_SEGMENTS: "GET_SEGMENTS" };
 
   NS.STORAGE = {
-    SETTINGS_KEY: "settings",       // chrome.storage.sync
-    STATS_KEY: "skipStats",         // chrome.storage.local
-    WHITELIST_KEY: "channelWhitelist" // chrome.storage.local
+    SETTINGS_KEY: "settings",         // chrome.storage.sync
+    STATS_KEY: "skipStats",           // chrome.storage.local
+    WHITELIST_KEY: "channelWhitelist", // chrome.storage.local
+    // Per-video whitelist-decision record { videoId, whitelisted, fetchedAt } the
+    // popup reads for its status line. Duplicate of shared/videoCache.js WL_PREFIX
+    // (the classic tree can't import it) — keep in sync.
+    WL_PREFIX: "sbwl_"                // chrome.storage.local, key = WL_PREFIX + videoId
   };
 
   // Keep in sync with shared/categories.js DEFAULT_SETTINGS.
@@ -35,7 +39,8 @@
       outro: false,
       preview: false,
       filler: false,
-      music_offtopic: false
+      music_offtopic: false,
+      hook: false
     },
     minSegmentLength: 3,
     showTimelineMarkers: true,
@@ -54,7 +59,8 @@
     outro: "#0202ed",
     preview: "#008fd6",
     filler: "#7300ff",
-    music_offtopic: "#ff9900"
+    music_offtopic: "#ff9900",
+    hook: "#395699"
   };
 
   /** Namespaced debug logger (visible in the page console under a filter). */

@@ -2,6 +2,7 @@
 // for which segments are skipped (and thus drawn). Loads the REAL classic content
 // module into a synthetic namespace. Run: node tests/segmentFilter.test.mjs
 import { readFileSync } from "node:fs";
+import { filterActive as sharedFilter } from "../shared/segmentFilter.js";
 
 const self = { __SBSKIP__: {} };
 new Function(
@@ -53,6 +54,35 @@ eq(
 );
 eq(filterActive([], base, false).length, 0, "empty raw -> 0");
 eq(filterActive(raw, null, false).length, 0, "no settings -> 0");
+
+// hook: the newly added category behaves like any other — included only when enabled.
+const withHook = [{ start: 5, end: 25, category: "hook" }]; // 20s
+eq(filterActive(withHook, { enabled: true, categories: { hook: true }, minSegmentLength: 0 }, false).length, 1,
+   "hook enabled -> included");
+eq(filterActive(withHook, { enabled: true, categories: { hook: false }, minSegmentLength: 0 }, false).length, 0,
+   "hook disabled -> excluded");
+
+// --- drift guard: shared/segmentFilter.js (the module-tree copy the popup runs) must
+// be a behavioral twin of this classic copy — SAME active set, SAME order, over the
+// whole battery. Both filter the same raw array, so element-wise === proves order too. ---
+const cases = [
+  [raw, base, false], [raw, base, true],
+  [raw, { ...base, enabled: false }, false],
+  [raw, { ...base, categories: { sponsor: false, selfpromo: true, intro: false } }, false],
+  [raw, { ...base, minSegmentLength: 5 }, false],
+  [fixture, { enabled: true, categories: { sponsor: true }, minSegmentLength: 65 }, false],
+  [fixture, { enabled: true, categories: { sponsor: true }, minSegmentLength: 64 }, false],
+  [withHook, { enabled: true, categories: { hook: true }, minSegmentLength: 0 }, false],
+  [withHook, { enabled: true, categories: { hook: false }, minSegmentLength: 0 }, false],
+  [[], base, false], [raw, null, false]
+];
+for (let i = 0; i < cases.length; i++) {
+  const [r, s, w] = cases[i];
+  const a = filterActive(r, s, w);
+  const b = sharedFilter(r, s, w);
+  const same = a.length === b.length && a.every((seg, j) => seg === b[j]);
+  eq(same, true, "shared==content active-set parity, case " + i);
+}
 
 console.log(fails ? "FAILED" : "OK");
 process.exit(fails ? 1 : 0);

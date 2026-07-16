@@ -23,6 +23,7 @@ export default {
   cat_preview: "Preview / recap",
   cat_filler: "Filler / tangent",
   cat_music_offtopic: "Non-music section",
+  cat_hook: "Hook / greeting",
 
   // Popup.
   popup_enabled: "Skipping enabled",
@@ -32,8 +33,12 @@ export default {
   popup_open_settings: "More settings",
 
   // Current-video status line (popup, active YouTube tab).
-  popup_status_marked: "Segments marked:",
+  popup_status_will_skip: "Will skip:",
+  popup_status_off: "Skipping is turned off",
+  popup_status_whitelisted: "This channel is whitelisted",
   popup_status_none: "No segments marked yet",
+  popup_status_too_short: "Enabled segments are below your minimum length",
+  popup_status_category_off: "These segment categories are turned off",
   popup_status_error: "Couldn't load segment data",
   popup_status_checking: "Checking…",
 

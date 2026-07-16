@@ -1,7 +1,10 @@
 /**
  * content/skipNotice.js — shows a small "skip notice" toast over the YouTube
- * player when skipEngine skips a segment: a localized "Skipped: <Category>" label,
- * an Undo button, and a close button. Auto-dismisses after a few seconds.
+ * player when skipEngine skips a segment: a localized "Skipped: <Category> · M:SS"
+ * label (the length is optional), an Undo button, and a close button. Auto-dismisses
+ * after a few seconds, but pauses while the pointer rests on it so it can't vanish
+ * mid-reach. Each skip is also announced to screen readers via a persistent
+ * aria-live region on document.body.
  *
  * View-only by design: the actual undo action (seeking the <video> back and
  * reversing the stat) is OWNED by skipEngine and passed in as an `onUndo`
@@ -30,6 +33,32 @@
   let generation = 0;
   let toastEl = null;
   let dismissTimer = null;
+  let srRegion = null;
+
+  /**
+   * The persistent, visually-hidden aria-live region that announces each skip to
+   * screen readers. Normally created empty before the first announcement and
+   * reused while attached (or recreated if external DOM churn removes it): a live region
+   * created and populated in the same tick is missed by many screen readers, so
+   * it should already be in the DOM before its text changes. It lives on
+   * document.body (not the player), survives toast replace/remove and player-
+   * subtree churn, and is never touched by remove()/clear(). Fail-open: returns
+   * null if body is absent.
+   * @returns {Element|null} the live region, or null when there is no document.body.
+   * @sideEffects May append a region when no attached one exists.
+   */
+  function ensureSrRegion() {
+    if (srRegion && srRegion.parentNode) return srRegion;
+    const body = document.body;
+    if (!body) return null;
+    const el = document.createElement("div");
+    el.className = "sbskip-sr-only";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    body.appendChild(el);
+    srRegion = el;
+    return el;
+  }
 
   /**
    * Locate YouTube's player container. Fail-open (may be null).
@@ -60,15 +89,20 @@
   NS.skipNotice = {
     /**
      * Show the skip notice for a just-skipped segment, replacing any current one.
-     * @param {{category: string, onUndo: () => void}} opts
+     * @param {{category: string, length?: number, onUndo: () => void}} opts
      *   category - SponsorBlock category id (for the localized label).
+     *   length   - skipped segment length in seconds; when finite, appended as
+     *              " · M:SS" (same form as the timeline-marker tooltip). Optional:
+     *              a missing/non-finite length just omits the suffix.
      *   onUndo   - invoked at most once on Undo click; owns the seek + stat reversal.
      * @returns {void}
-     * @sideEffects Inserts a toast into the player DOM and sets a dismiss timer.
+     * @sideEffects Inserts a toast into the player DOM, sets a dismiss timer, and
+     *   updates the aria-live region.
      */
     show(opts) {
       try {
         const category = opts && opts.category;
+        const length = opts && opts.length;
         const onUndo =
           opts && typeof opts.onUndo === "function" ? opts.onUndo : null;
         const player = findPlayer();
@@ -77,12 +111,17 @@
         remove(); // drop any existing toast + its pending timer
         const gen = ++generation;
 
+        let labelText = NS.i18n.notice("skipped") + ": " + NS.i18n.catName(category);
+        if (Number.isFinite(length) && NS.timelineGeometry) {
+          labelText += " · " + NS.timelineGeometry.formatLength(length);
+        }
+
         const toast = document.createElement("div");
         toast.className = "sbskip-notice";
 
         const label = document.createElement("span");
         label.className = "sbskip-notice-label";
-        label.textContent = NS.i18n.notice("skipped") + ": " + NS.i18n.catName(category);
+        label.textContent = labelText;
 
         const undoBtn = document.createElement("button");
         undoBtn.className = "sbskip-notice-undo";
@@ -119,6 +158,27 @@
         player.appendChild(toast);
         toastEl = toast;
 
+        // Keep the toast up while the pointer is on it, so it can't vanish mid-reach
+        // toward Undo. Pause on enter, re-arm a fresh timer on leave. Both are
+        // generation-guarded, so a stale toast's late mouseleave can't re-arm.
+        toast.addEventListener("mouseenter", () => {
+          if (gen !== generation) return;
+          if (dismissTimer) {
+            clearTimeout(dismissTimer);
+            dismissTimer = null;
+          }
+        });
+        toast.addEventListener("mouseleave", () => {
+          if (gen !== generation || dismissTimer) return;
+          dismissTimer = setTimeout(() => {
+            if (gen === generation) remove();
+          }, DISMISS_MS);
+        });
+
+        // Announce the skip to screen readers via the persistent live region.
+        const region = ensureSrRegion();
+        if (region) region.textContent = labelText;
+
         dismissTimer = setTimeout(() => {
           if (gen === generation) remove();
         }, DISMISS_MS);
@@ -142,4 +202,12 @@
       }
     }
   };
+
+  // Create the (empty) live region up front so the first skip's text change is
+  // announced — a region created and populated in one tick can be missed by AT.
+  try {
+    ensureSrRegion();
+  } catch (e) {
+    NS.log("skipNotice sr-region init error", e);
+  }
 })();

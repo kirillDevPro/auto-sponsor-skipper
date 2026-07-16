@@ -68,3 +68,18 @@
   line-height: 1;
   opacity: 0.8;
 }
+
+/* Visually-hidden aria-live region for the skip announcement. Clip-rect (not
+   display:none / visibility:hidden, which would drop it from the a11y tree). */
+.sbskip-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  border: 0;
+  white-space: nowrap;
+}

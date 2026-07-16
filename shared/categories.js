@@ -28,7 +28,8 @@ export const CATEGORIES = [
   { id: "outro",          defaultOn: false, i18nKey: "cat_outro",          color: "#0202ed" },
   { id: "preview",        defaultOn: false, i18nKey: "cat_preview",        color: "#008fd6" },
   { id: "filler",         defaultOn: false, i18nKey: "cat_filler",         color: "#7300ff" },
-  { id: "music_offtopic", defaultOn: false, i18nKey: "cat_music_offtopic", color: "#ff9900" }
+  { id: "music_offtopic", defaultOn: false, i18nKey: "cat_music_offtopic", color: "#ff9900" },
+  { id: "hook",           defaultOn: false, i18nKey: "cat_hook",           color: "#395699" }
 ];
 
 /** All category ids — the superset the service worker queries from the API. */

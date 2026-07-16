@@ -29,6 +29,10 @@ ok(f.lastUrl.includes("/5f6b?"), "url uses 4-char hash prefix");
 ok(f.lastUrl.includes("service=YouTube"), "service=YouTube present");
 ok(f.lastUrl.includes("actionType=skip"), "actionType=skip present");
 ok(/categories=%5B%22sponsor%22/.test(f.lastUrl), "categories JSON-array is URL-encoded");
+// Decode the categories param (order-agnostic) to prove hook is actually requested from the API.
+const decodedCats = JSON.parse(new URL(f.lastUrl).searchParams.get("categories"));
+ok(Array.isArray(decodedCats) && decodedCats.includes("hook"), "categories query includes hook");
+ok(decodedCats[0] === "sponsor", "categories query still starts with sponsor");
 
 // --- 404 -> empty ---
 const r404 = await fetchSegments("5GKIUKsrnKo", mockFetch(404, null));

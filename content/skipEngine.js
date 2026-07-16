@@ -14,8 +14,9 @@
  *   backward using a now-stale currentTime.
  * - The seek target is clamped just below the video duration, so a sponsor that
  *   runs to the very end is still skipped (the video then ends naturally).
- * - After a skip, the optional skip notice is shown with an Undo callback owned
- *   by this module: it seeks back, keeps the segment marked, and reverses stats.
+ * - After a skip, the optional skip notice receives the segment length and an
+ *   Undo callback owned by this module: it seeks back, keeps the segment marked,
+ *   and reverses stats.
  */
 
 ;(() => {
@@ -81,6 +82,7 @@
             // are per-iteration bindings, so the closure captures this skip's values.
             NS.skipNotice.show({
               category: seg.category,
+              length: len,
               onUndo() {
                 if (!video || !video.isConnected) return;
                 recentlySkipped.add(key);

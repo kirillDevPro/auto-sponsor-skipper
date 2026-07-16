@@ -15,7 +15,7 @@
 import { CATEGORIES, SETTINGS_KEY, STATS_KEY } from "../shared/categories.js";
 import { loadSettings, updateSettings, loadStats } from "../shared/settingsStore.js";
 import { t, localizePage, formatDuration, onLanguageChange } from "../shared/i18n.js";
-import { cacheKey, isFresh } from "../shared/videoCache.js";
+import { cacheKey, wlKey, isFresh } from "../shared/videoCache.js";
 import { MSG_GET_SEGMENTS } from "../shared/messaging.js";
 import { watchVideoIdFromUrl, statusView } from "./popupStatus.js";
 
@@ -30,6 +30,31 @@ let lang = "en";
 let lastSeconds = 0; // last known stats.seconds, so a language switch can re-format it
 let currentVideoId = null; // active tab's watch videoId, or null off a watch page
 let lastStatusEntry;       // last read sbseg_ cache entry (undefined until first read)
+let lastWhitelisted = null; // recorded whitelist decision for currentVideoId; null = not yet known
+
+/**
+ * Read a per-video whitelist-decision record into the popup's tri-state: true/false
+ * when the record is for the current video, or null (unknown) when it is missing or
+ * belongs to a different video.
+ * @param {{videoId?:string, whitelisted?:boolean}|null|undefined} wl
+ * @param {string|null} videoId - the video the popup is showing.
+ * @returns {boolean|null}
+ */
+function whitelistedOf(wl, videoId) {
+  return wl && wl.videoId === videoId ? !!wl.whitelisted : null;
+}
+
+/**
+ * A cache entry drives a segment-data verdict only while it is FRESH; a stale or
+ * missing one reads as null. The initial refresh uses that null to trigger a
+ * refetch, while live updates reuse the same freshness rule. Higher-precedence
+ * states such as master-off or whitelisted may still render without segment data.
+ * @param {object|null|undefined} entry
+ * @returns {object|null}
+ */
+function freshOrNull(entry) {
+  return isFresh(entry, Date.now()) ? entry : null;
+}
 
 /**
  * Reflect the master-enabled state in the popup controls.
@@ -74,19 +99,26 @@ function renderCategories() {
       });
     });
 
+    // A colored dot matching this category's timeline-marker color (single source:
+    // shared/categories.js CATEGORIES[].color, the same field the markers use).
+    const dot = document.createElement("span");
+    dot.className = "cat-dot";
+    dot.style.backgroundColor = cat.color;
+
     const label = document.createElement("label");
     label.htmlFor = input.id;
     label.dataset.i18n = cat.i18nKey;
     label.textContent = t(lang, cat.i18nKey);
 
-    row.append(input, label);
+    row.append(input, dot, label);
     categoriesEl.append(row);
   }
 }
 
 /**
- * Render the current video's segment status line from currentVideoId +
- * lastStatusEntry. Hidden when the active tab is not a YouTube watch page.
+ * Render the current video's status from its id, fresh segment-cache entry,
+ * settings, and recorded whitelist decision. Hidden when the active tab is not a
+ * YouTube watch page.
  * @returns {void}
  * @sideEffects Updates the #video-status element's text and hidden state.
  */
@@ -95,7 +127,7 @@ function paintStatus() {
     statusEl.hidden = true;
     return;
   }
-  const view = statusView(lastStatusEntry);
+  const view = statusView(lastStatusEntry, settings, lastWhitelisted);
   let text = t(lang, view.key);
   if (view.count !== null) text += " " + view.count;
   statusEl.textContent = text;
@@ -103,9 +135,10 @@ function paintStatus() {
 }
 
 /**
- * Read the active video's cached status and repaint. If the cache entry is
- * missing or stale, ask the service worker to (re)fetch — the storage.onChanged
- * listener repaints when it writes, so opening the popup doubles as a re-check.
+ * Read the active video's segment-cache and whitelist-decision records, then
+ * repaint. If the segment entry is missing or stale, ask the service worker to
+ * (re)fetch — the storage.onChanged listener repaints when it writes, so opening
+ * the popup doubles as a re-check.
  * @returns {Promise<void>}
  * @sideEffects Reads chrome.storage.local; may send a GET_SEGMENTS message.
  */
@@ -114,11 +147,16 @@ async function refreshStatus() {
     paintStatus();
     return;
   }
-  const key = cacheKey(currentVideoId);
-  const obj = await chrome.storage.local.get(key);
-  lastStatusEntry = obj[key] ?? null;
+  const segK = cacheKey(currentVideoId);
+  const wlK = wlKey(currentVideoId);
+  const obj = await chrome.storage.local.get([segK, wlK]);
+  // Only a FRESH entry drives a segment-data verdict, so the popup never asserts
+  // "will skip" from data the content path has already discarded. A stale or
+  // missing entry is null while refetching; higher-precedence states still apply.
+  lastStatusEntry = freshOrNull(obj[segK] ?? null);
+  lastWhitelisted = whitelistedOf(obj[wlK], currentVideoId);
   paintStatus();
-  if (!isFresh(lastStatusEntry, Date.now())) {
+  if (!lastStatusEntry) {
     // Stale or missing — trigger a background (re)fetch; onChanged repaints.
     chrome.runtime.sendMessage({ type: MSG_GET_SEGMENTS, videoId: currentVideoId }, () => {
       void chrome.runtime.lastError; // fire-and-forget; ignore transport errors
@@ -174,6 +212,7 @@ async function init() {
       settings = await loadSettings();
       renderEnabled();
       syncCategoryChecks();
+      paintStatus(); // a category/master/min-length change alters what WILL be skipped
     }
     if (area === "local" && changes[STATS_KEY]) {
       const s = changes[STATS_KEY].newValue || { count: 0, seconds: 0 };
@@ -182,8 +221,17 @@ async function init() {
       timeEl.textContent = formatDuration(lastSeconds, lang);
     }
     // Repaint only when the current active video's shared cache entry changes.
+    // Only a FRESH write drives a segment-data verdict; a prune removal becomes
+    // null, after which the higher-precedence states or "checking" apply.
     if (area === "local" && currentVideoId && changes[cacheKey(currentVideoId)]) {
-      lastStatusEntry = changes[cacheKey(currentVideoId)].newValue || null;
+      lastStatusEntry = freshOrNull(changes[cacheKey(currentVideoId)].newValue || null);
+      paintStatus();
+    }
+    // Recompute the recorded whitelist decision when it changes for this video
+    // (the content script re-stamps after a navigation or a whitelist edit, and
+    // clears it at the start of a new navigation -> null/unknown for precedence).
+    if (area === "local" && currentVideoId && changes[wlKey(currentVideoId)]) {
+      lastWhitelisted = whitelistedOf(changes[wlKey(currentVideoId)].newValue, currentVideoId);
       paintStatus();
     }
   });

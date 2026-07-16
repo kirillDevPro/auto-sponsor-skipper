@@ -13,7 +13,7 @@ import en from "../shared/messages/en.js";
 import uk from "../shared/messages/uk.js";
 import ru from "../shared/messages/ru.js";
 import { t, formatDuration, onLanguageChange, getLanguage, LANGUAGES } from "../shared/i18n.js";
-import { CATEGORIES } from "../shared/categories.js";
+import { CATEGORIES, CATEGORY_COLORS, DEFAULT_SETTINGS } from "../shared/categories.js";
 
 let fails = 0;
 const ok = (c, msg) => { if (!c) { console.log("[FAIL]", msg); fails++; } else console.log("[PASS]", msg); };
@@ -91,6 +91,25 @@ for (const lang of ["en", "uk", "ru"]) {
 // notice() reads the language at call time (settings set to ru just above)
 ok(cself.__SBSKIP__.i18n.notice("undo") === ru.notice_undo, "notice(undo): reads the language at call time (ru)");
 ok(cself.__SBSKIP__.i18n.notice("skipped") === ru.notice_skipped, "notice(skipped): reads the language at call time (ru)");
+
+// --- content-tree NS.CATEGORY_COLORS / NS.DEFAULTS == shared/categories.js (deliberate duplicate) ---
+// Previously unguarded: a missing content-tree color silently drops that category's timeline marker
+// (timelineMarkers.js `if (!color) continue;`), and a missing default would misseed a fresh install.
+// An explicit hook check is required because the parity loops iterate CATEGORIES and would pass even
+// if hook had been omitted from the catalog entirely.
+ok(CATEGORIES.some((c) => c.id === "hook" && c.color === "#395699" && c.defaultOn === false),
+   "catalog includes the hook category (off by default, canonical color)");
+const CCOLORS = cself.__SBSKIP__.CATEGORY_COLORS;
+const CDEFAULTS = cself.__SBSKIP__.DEFAULTS.categories;
+for (const c of CATEGORIES) {
+  ok(CCOLORS[c.id] === c.color && CCOLORS[c.id] === CATEGORY_COLORS[c.id],
+     "CATEGORY_COLORS content-tree == shared for " + c.id);
+  ok(CDEFAULTS[c.id] === DEFAULT_SETTINGS.categories[c.id],
+     "NS.DEFAULTS.categories content-tree == shared for " + c.id);
+}
+const catIdSet = CATEGORIES.map((c) => c.id).sort().join(",");
+ok(Object.keys(CCOLORS).sort().join(",") === catIdSet, "NS.CATEGORY_COLORS has exactly the catalog ids");
+ok(Object.keys(CDEFAULTS).sort().join(",") === catIdSet, "NS.DEFAULTS.categories has exactly the catalog ids");
 
 // --- manifest content-script ORDER (a wrong slot passes node --check but breaks at runtime) ---
 const manifest = JSON.parse(read("../manifest.json"));

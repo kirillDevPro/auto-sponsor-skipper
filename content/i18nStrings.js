@@ -26,7 +26,8 @@
       outro: "Outro / endcards",
       preview: "Preview / recap",
       filler: "Filler / tangent",
-      music_offtopic: "Non-music section"
+      music_offtopic: "Non-music section",
+      hook: "Hook / greeting"
     },
     uk: {
       sponsor: "Спонсор",
@@ -36,7 +37,8 @@
       outro: "Кінцівка / кінцеві заставки",
       preview: "Прев'ю / короткий огляд",
       filler: "Вода / відступ від теми",
-      music_offtopic: "Немузичний фрагмент"
+      music_offtopic: "Немузичний фрагмент",
+      hook: "Гачок / вітання"
     },
     ru: {
       sponsor: "Спонсор",
@@ -46,7 +48,8 @@
       outro: "Концовка / конечные заставки",
       preview: "Превью / краткий обзор",
       filler: "Вода / отступление",
-      music_offtopic: "Немузыкальный фрагмент"
+      music_offtopic: "Немузыкальный фрагмент",
+      hook: "Затравка / приветствие"
     }
   };
 

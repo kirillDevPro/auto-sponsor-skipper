@@ -2,6 +2,12 @@
 
 All notable changes to Auto Sponsor Skipper are documented here. This project follows [semantic versioning](https://semver.org/).
 
+## 1.5.0
+- The popup now tells you what will actually be skipped on the video you're watching — "Will skip: 3" — or, when nothing will be, exactly why: skipping is off, the channel is whitelisted, those segment categories are turned off, the segments are shorter than your minimum length, none are marked yet, or the data failed to load.
+- The skip notice now shows how long the skipped segment was (e.g. "Skipped: Sponsor · 1:04"), stays on screen while your pointer is over it so it can't vanish as you reach for **Undo**, and announces each skip to screen readers.
+- Each category now has a colored dot in the popup and Settings, matching its marker color on the progress bar.
+- New "Hook / greeting" category (the spoken intro/greeting at the start of some videos) — available to turn on, off by default.
+
 ## 1.4.0
 - A brief skip notice now appears over the player each time a segment is skipped, showing which category was skipped and an **Undo** button that jumps you back to the start of the segment (and corrects the stats). It also has a close button and fades away on its own after a few seconds.
 - New Settings toggle "Show a skip notice with an undo button" (on by default) to turn the notice off.

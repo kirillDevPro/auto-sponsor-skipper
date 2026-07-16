@@ -127,12 +127,18 @@ export async function initGlobal() {
       });
     });
 
+    // A colored dot matching this category's timeline-marker color (single source:
+    // shared/categories.js CATEGORIES[].color, the same field the markers use).
+    const dot = document.createElement("span");
+    dot.className = "cat-dot";
+    dot.style.backgroundColor = cat.color;
+
     const label = document.createElement("label");
     label.htmlFor = input.id;
     label.dataset.i18n = cat.i18nKey;
     label.textContent = t(settings.language, cat.i18nKey);
 
-    row.append(input, label);
+    row.append(input, dot, label);
     catsEl.append(row);
   }
 

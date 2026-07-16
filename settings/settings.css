@@ -272,6 +272,15 @@ input[type="checkbox"] {
   padding: 8px 0;
 }
 
+/* Category color dot — fill set inline from CATEGORIES[].color (matches the
+   timeline marker). Kept in sync with popup/popup.css .cat-dot. */
+.cat-dot {
+  flex: 0 0 auto;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
 .cat label {
   flex: 1;
   font-size: 0.875rem;

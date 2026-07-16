@@ -15,6 +15,7 @@ export default {
   cat_preview: "Превью / краткий обзор",
   cat_filler: "Вода / отступление",
   cat_music_offtopic: "Немузыкальный фрагмент",
+  cat_hook: "Затравка / приветствие",
 
   popup_enabled: "Пропуск включён",
   popup_categories: "Пропускать эти сегменты",
@@ -22,8 +23,12 @@ export default {
   popup_time_saved: "Сэкономлено",
   popup_open_settings: "Больше настроек",
 
-  popup_status_marked: "Размечено сегментов:",
+  popup_status_will_skip: "Будет пропущено:",
+  popup_status_off: "Пропуск отключён",
+  popup_status_whitelisted: "Канал в белом списке",
   popup_status_none: "Сегменты ещё не размечены",
+  popup_status_too_short: "Включённые сегменты короче минимальной длины",
+  popup_status_category_off: "Эти категории сегментов отключены",
   popup_status_error: "Не удалось загрузить данные",
   popup_status_checking: "Проверка…",
 
