@@ -1,57 +1,45 @@
 /**
- * background/firstRunLanguage.js — seeds settings.language from the browser UI
- * locale the first time the extension runs, so a user whose Chrome is in German
- * does not have to find the language selector to stop seeing English.
+ * background/firstRunLanguage.js — records the browser's UI locale as a language
+ * HINT when the extension is installed or updated, so a user whose Chrome is in
+ * German does not have to find the language selector to stop seeing English.
+ *
+ * It records a hint; it does not make a choice. The hint goes to its own
+ * chrome.storage.LOCAL key (LANG_HINT_KEY) and the settings object is never
+ * touched. That separation is what makes this safe:
+ *   - An explicit choice always wins, structurally rather than by a guard:
+ *     every reader prefers settings.language and only falls back to the hint
+ *     (shared/settingsStore.js mergeSettings, content/settingsClient.js).
+ *   - It cannot clobber Chrome Sync. A read-then-write of the synced settings
+ *     item would race the sync restore that lands seconds after a fresh install
+ *     on a second machine: our write, built from the pre-restore snapshot, could
+ *     win the conflict and wipe the categories/whitelist/language the user had
+ *     set on their other machine. Writing a different key in a different area
+ *     removes that failure mode instead of narrowing its window.
+ *   - Local, not sync, because the hint describes THIS browser's UI locale.
+ *     Syncing it would push one machine's browser language onto another's.
  *
  * Stateless, like the rest of the worker: a top-level-registered listener that
- * fires once and writes durable storage. It holds nothing in memory, so the
- * worker suspending afterwards costs nothing.
- *
- * A stored language ALWAYS wins — this only ever fills in a missing value:
- *   - reason "install": a fresh install (possibly with settings already restored
- *     by Chrome Sync — hence the read guard, not a blind write),
- *   - reason "update": only for users who never had a language stored (they
- *     predate the language selector, or never changed a setting).
- * Other reasons (chrome_update, shared_module_update) are not our event.
- *
- * The guard reads the RAW stored object rather than going through
- * shared/settingsStore.js: loadSettings() merges DEFAULT_SETTINGS, which always
- * yields a language, so it could never tell "chose English" from "never chose".
- * For the same reason the write is a raw set over the stored object, never
- * updateSettings() — whose read-fresh-merge would overwrite a language that
- * arrived from Chrome Sync between our read and our write.
+ * fires once and writes durable storage, holding nothing in memory.
  */
 
-import { SETTINGS_KEY } from "../shared/categories.js";
+import { LANG_HINT_KEY } from "../shared/categories.js";
 import { resolveUILanguage } from "./uiLanguage.js";
 
 /**
- * Read the raw stored settings object, unmerged.
- * @returns {Promise<object|undefined>} exactly what is in storage, if anything.
- * @sideEffects Reads chrome.storage.sync.
- */
-async function readRawSettings() {
-  const obj = await chrome.storage.sync.get(SETTINGS_KEY);
-  return obj[SETTINGS_KEY];
-}
-
-/**
- * Seed settings.language from the browser UI locale, unless one is already stored.
+ * Record the browser UI locale as the language hint.
  * @param {{reason: string}} details - the onInstalled details.
  * @returns {Promise<void>}
- * @sideEffects May write settings.language to chrome.storage.sync.
+ * @sideEffects Writes LANG_HINT_KEY to chrome.storage.local.
  */
-async function seedLanguage(details) {
+async function recordLanguageHint(details) {
+  // "install" is the first run. "update" refreshes the hint for users who still
+  // have no explicit choice (they predate the language selector) — harmless for
+  // everyone else, since settings.language outranks the hint anyway.
+  // chrome_update / shared_module_update are not our event.
   if (details.reason !== "install" && details.reason !== "update") return;
 
-  const stored = await readRawSettings();
-  if (stored && typeof stored.language === "string") return; // an existing choice wins
-
-  // Synchronous, so no await separates the guard above from the write below:
-  // the only window left is a concurrent writer, which Chrome resolves
-  // last-write-wins anyway.
   const language = resolveUILanguage(chrome.i18n.getUILanguage());
-  await chrome.storage.sync.set({ [SETTINGS_KEY]: Object.assign({}, stored, { language }) });
+  await chrome.storage.local.set({ [LANG_HINT_KEY]: language });
 }
 
 /**
@@ -62,9 +50,8 @@ async function seedLanguage(details) {
  */
 export function registerFirstRunLanguage() {
   chrome.runtime.onInstalled.addListener((details) => {
-    // Detection is a nicety: if anything here fails the UI still opens in
-    // English (DEFAULT_SETTINGS.language), so never let it reject into the
-    // install path.
-    seedLanguage(details).catch(() => {});
+    // The hint is a nicety: if detection or the write fails the UI still opens
+    // in English (DEFAULT_SETTINGS.language), so never reject into the install path.
+    recordLanguageHint(details).catch(() => {});
   });
 }

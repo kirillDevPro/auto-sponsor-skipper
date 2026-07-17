@@ -1,37 +1,43 @@
-// Headless: background/firstRunLanguage.js — seeding settings.language from the
-// browser UI locale on first run. The tests that matter are the ones proving it
-// NEVER overwrites a language the user (or Chrome Sync) already put there, and
-// never breaks install when detection fails.
+// Headless: background/firstRunLanguage.js records the browser UI locale as a
+// language HINT at install/update. The tests that matter prove it can never
+// affect the user's settings: it must write only its own local key, never the
+// synced settings item (a read-modify-write there would race Chrome Sync's
+// restore on a fresh install and could wipe the user's other settings), and an
+// explicit choice must outrank the hint.
 //
-// The UI locales driven here are derived from the CATALOG, not hardcoded: this
-// file tests the seeding rules, and must not start failing the day a particular
-// language does or does not ship. background/uiLanguage.js owns the mapping
-// itself, and tests/uiLanguage.test.mjs pins it against the full 27-code set.
+// The UI locales driven here come from the CATALOG, not hardcoded: this file
+// tests the recording rules; background/uiLanguage.js owns the mapping, pinned
+// against all 27 codes in tests/uiLanguage.test.mjs.
 //
 // Run: node tests/firstRunLanguage.test.mjs
-import { SETTINGS_KEY } from "../shared/categories.js";
+import { LANG_HINT_KEY, SETTINGS_KEY } from "../shared/categories.js";
+import { mergeSettings } from "../shared/settingsStore.js";
 import { LANGUAGE_CODES, FALLBACK } from "../shared/languages.js";
 
 let fails = 0;
 const ok = (c, msg) => { if (!c) { console.log("[FAIL]", msg); fails++; } else console.log("[PASS]", msg); };
 
-// A fake chrome: records every sync write and lets each test pick the stored
-// value and the reported UI locale.
-let store, writes, listener, uiLanguage, getUILanguageThrows, getThrows;
+// A fake chrome recording every write, per area, so a write to the WRONG area is
+// visible rather than merely absent.
+let local, sync, localWrites, syncWrites, listener, uiLanguage, getUILanguageThrows, setThrows;
 function installFakeChrome() {
-  store = {};
-  writes = [];
+  local = {}; sync = {};
+  localWrites = []; syncWrites = [];
   listener = null;
   uiLanguage = "en-US";
   getUILanguageThrows = false;
-  getThrows = false;
+  setThrows = false;
   globalThis.chrome = {
     runtime: { onInstalled: { addListener: (fn) => { listener = fn; } } },
     i18n: { getUILanguage: () => { if (getUILanguageThrows) throw new Error("boom"); return uiLanguage; } },
     storage: {
       sync: {
-        async get(k) { if (getThrows) throw new Error("storage down"); return (k in store) ? { [k]: store[k] } : {}; },
-        async set(obj) { writes.push(JSON.parse(JSON.stringify(obj))); Object.assign(store, obj); }
+        async get(k) { return (k in sync) ? { [k]: sync[k] } : {}; },
+        async set(obj) { syncWrites.push(obj); Object.assign(sync, obj); }
+      },
+      local: {
+        async get(k) { return (k in local) ? { [k]: local[k] } : {}; },
+        async set(obj) { if (setThrows) throw new Error("quota"); localWrites.push(obj); Object.assign(local, obj); }
       }
     }
   };
@@ -40,8 +46,6 @@ function installFakeChrome() {
 installFakeChrome();
 const { registerFirstRunLanguage } = await import("../background/firstRunLanguage.js");
 
-// The listener is registered at import/registration time, synchronously — an MV3
-// listener added later than the first tick can miss the event that woke the worker.
 registerFirstRunLanguage();
 ok(typeof listener === "function", "registers an onInstalled listener synchronously");
 
@@ -55,69 +59,39 @@ async function fire(details) {
   await new Promise((r) => setTimeout(r, 0)); // let the async continuation settle
 }
 
-const langOf = () => (store[SETTINGS_KEY] || {}).language;
-
-// Two shipped non-fallback languages to drive detection with, whatever ships.
+const hint = () => local[LANG_HINT_KEY];
 const [SEED_A, SEED_B] = LANGUAGE_CODES.filter((c) => c !== FALLBACK);
-ok(typeof SEED_A === "string" && typeof SEED_B === "string",
-   "fixture: the catalog ships at least two non-fallback languages");
 
-// --- fresh install, nothing stored: detect and write ---
+// --- install: record the detected hint, in LOCAL, and touch nothing else ---
 installFakeChrome();
 registerFirstRunLanguage();
 uiLanguage = SEED_A;
 await fire({ reason: "install" });
-ok(langOf() === SEED_A, "install + empty storage: writes the detected language (" + SEED_A + ")");
-ok(writes.length === 1, "install: writes exactly once");
+ok(hint() === SEED_A, "install: records the detected language as the local hint (" + SEED_A + ")");
+ok(localWrites.length === 1, "install: exactly one local write");
 
-// --- fresh install, Chrome Sync already restored an explicit choice: DO NOT touch ---
-// The clobber guard. A second machine can have settings synced in before
-// onInstalled runs; overwriting there would silently undo the user's choice.
+// THE regression this design exists for: the synced settings item is never
+// written, so first-run detection cannot lose a Chrome Sync restore.
+ok(syncWrites.length === 0, "install: NEVER writes chrome.storage.sync");
+ok(!(SETTINGS_KEY in sync), "install: the settings item is untouched");
+
+// --- it does not even READ the settings item (nothing to race) ---
 installFakeChrome();
 registerFirstRunLanguage();
-store[SETTINGS_KEY] = { language: "fr", enabled: true };
+let syncReads = 0;
+const realSyncGet = chrome.storage.sync.get;
+chrome.storage.sync.get = async (k) => { syncReads++; return realSyncGet(k); };
 uiLanguage = SEED_A;
 await fire({ reason: "install" });
-ok(langOf() === "fr", "install + synced language: leaves the stored choice alone");
-ok(writes.length === 0, "install + synced language: writes nothing");
+ok(syncReads === 0, "install: never reads the synced settings item either");
 
-// --- an explicitly chosen fallback must survive a non-English browser ---
-// The value it would be detected AS is indistinguishable from a real choice, so
-// the guard is what protects it.
+// --- update: refreshes the hint (harmless: an explicit choice outranks it) ---
 installFakeChrome();
 registerFirstRunLanguage();
-store[SETTINGS_KEY] = { language: FALLBACK };
-uiLanguage = SEED_A;
-await fire({ reason: "install" });
-ok(langOf() === FALLBACK, "install + explicit " + FALLBACK + ": not re-detected to " + SEED_A);
-ok(writes.length === 0, "install + explicit " + FALLBACK + ": writes nothing");
-
-// --- stored settings WITHOUT a language: fill it in, keep the other fields ---
-installFakeChrome();
-registerFirstRunLanguage();
-store[SETTINGS_KEY] = { enabled: false, minSegmentLength: 12 };
-uiLanguage = SEED_A;
-await fire({ reason: "install" });
-ok(langOf() === SEED_A, "install + settings without language: writes the detected language");
-ok(store[SETTINGS_KEY].enabled === false && store[SETTINGS_KEY].minSegmentLength === 12,
-   "install: preserves the other stored fields (raw merge, not a settings rebuild)");
-
-// --- update, user predates the language selector (no language stored): seed it ---
-installFakeChrome();
-registerFirstRunLanguage();
-store[SETTINGS_KEY] = { enabled: true };
 uiLanguage = SEED_B;
 await fire({ reason: "update" });
-ok(langOf() === SEED_B, "update + no language stored: seeds the detected language");
-
-// --- update with a language already stored: never touched ---
-installFakeChrome();
-registerFirstRunLanguage();
-store[SETTINGS_KEY] = { language: SEED_B };
-uiLanguage = SEED_A;
-await fire({ reason: "update" });
-ok(langOf() === SEED_B, "update + stored language: left alone");
-ok(writes.length === 0, "update + stored language: writes nothing");
+ok(hint() === SEED_B, "update: records the detected language as the hint");
+ok(syncWrites.length === 0, "update: still never writes sync");
 
 // --- reasons that are not ours ---
 for (const reason of ["chrome_update", "shared_module_update"]) {
@@ -125,7 +99,7 @@ for (const reason of ["chrome_update", "shared_module_update"]) {
   registerFirstRunLanguage();
   uiLanguage = SEED_A;
   await fire({ reason });
-  ok(writes.length === 0, "reason " + reason + ": writes nothing");
+  ok(localWrites.length === 0 && syncWrites.length === 0, "reason " + reason + ": writes nothing");
 }
 
 // --- unsupported UI locale -> the fallback, still a shipped code ---
@@ -133,24 +107,37 @@ installFakeChrome();
 registerFirstRunLanguage();
 uiLanguage = "vi-VN";
 await fire({ reason: "install" });
-ok(langOf() === FALLBACK, "install + unsupported UI locale: falls back to " + FALLBACK);
-ok(LANGUAGE_CODES.includes(langOf()), "install: the seeded language is always a shipped code");
+ok(hint() === FALLBACK, "install + unsupported UI locale: hint falls back to " + FALLBACK);
+ok(LANGUAGE_CODES.includes(hint()), "install: the hint is always a shipped code");
 
-// --- detection failure must never escape into the install path ---
+// --- failures must never escape into the install path ---
 installFakeChrome();
 registerFirstRunLanguage();
 getUILanguageThrows = true;
 let threw = false;
 try { await fire({ reason: "install" }); } catch { threw = true; }
 ok(!threw, "getUILanguage throwing does not reject into the install path");
-ok(writes.length === 0, "getUILanguage throwing: writes nothing");
+ok(localWrites.length === 0, "getUILanguage throwing: writes nothing");
 
 installFakeChrome();
 registerFirstRunLanguage();
-getThrows = true;
+setThrows = true;
 threw = false;
 try { await fire({ reason: "install" }); } catch { threw = true; }
-ok(!threw, "a storage read failure does not reject into the install path");
+ok(!threw, "a storage write failure does not reject into the install path");
+
+// --- the design contract this file exists to protect ---
+// Writing a separate key only works because every reader ranks an explicit
+// choice above the hint; that is what replaced the old read-then-write guard.
+// tests/settings.test.mjs owns the full mergeSettings precedence matrix — this
+// is the one cross-check that the two halves of the design still meet.
+// A settings object restored by Chrome Sync survives intact next to a hint:
+// there is no longer anything for first-run detection to overwrite.
+const restored = { enabled: false, minSegmentLength: 42, language: SEED_B, categories: { sponsor: false } };
+const merged = mergeSettings(restored, SEED_A);
+ok(merged.language === SEED_B && merged.enabled === false && merged.minSegmentLength === 42 &&
+   merged.categories.sponsor === false,
+   "merge: a Chrome-Sync-restored settings object survives intact, and its language outranks the hint");
 
 console.log(fails ? "FAILED" : "OK");
 process.exit(fails ? 1 : 0);

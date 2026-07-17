@@ -51,13 +51,24 @@ export const DEFAULT_SETTINGS = {
   showTimelineMarkers: true,
   // Show a brief "skipped — undo" notice over the player after each skip.
   showSkipNotice: true,
-  // Selected UI language for the in-page popup/options runtime (shared/i18n.js);
-  // "en" default is independent of the browser locale. Not read by the SW.
+  // The user's EXPLICIT UI-language choice for the in-page popup/options runtime
+  // (shared/i18n.js). Absent until they pick one, which is what lets the
+  // browser-locale hint (LANG_HINT_KEY) apply; once present it always wins.
   language: "en"
 };
 
 /** chrome.storage.sync key holding the DEFAULT_SETTINGS-shaped object. */
 export const SETTINGS_KEY = "settings";
+/**
+ * chrome.storage.LOCAL key holding the browser-locale language hint the service
+ * worker detects on first run (background/firstRunLanguage.js). Deliberately
+ * NOT part of the settings object and deliberately NOT synced: it describes THIS
+ * browser's UI locale, which differs per machine, and keeping it out of the
+ * synced settings item means first-run detection can never overwrite settings
+ * that Chrome Sync is restoring at that moment. It only ever applies when the
+ * user has made no explicit choice — settings.language outranks it.
+ */
+export const LANG_HINT_KEY = "languageHint";
 /** chrome.storage.local key holding { count, seconds }. */
 export const STATS_KEY = "skipStats";
 /** chrome.storage.local key holding an array of channel ids/handles. */

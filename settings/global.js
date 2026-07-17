@@ -11,7 +11,7 @@
 
 import { CATEGORIES, SETTINGS_KEY } from "../shared/categories.js";
 import { LANGUAGES } from "../shared/languages.js";
-import { loadSettings, updateSettings } from "../shared/settingsStore.js";
+import { chooseLanguage, loadSettings, updateSettings } from "../shared/settingsStore.js";
 import { t, localizePage, onLanguageChange } from "../shared/i18n.js";
 
 /**
@@ -72,9 +72,9 @@ export async function initGlobal() {
   }
   langEl.value = settings.language;
   langEl.addEventListener("change", async () => {
-    settings = await updateSettings((s) => {
-      s.language = langEl.value;
-    });
+    // chooseLanguage, not updateSettings: this is the call that records an
+    // explicit choice, which from here on outranks the browser-locale hint.
+    settings = await chooseLanguage(langEl.value);
     flashSaved();
   });
 

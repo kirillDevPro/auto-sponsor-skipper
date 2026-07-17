@@ -64,5 +64,24 @@ ok(matchUILanguage("de-DE", ["en"]) === FALLBACK, "match: language absent from t
 ok(matchUILanguage("en-GB", ["en"]) === "en", "match: single-code catalog resolves");
 ok(matchUILanguage("de", []) === FALLBACK, "match: empty catalog -> fallback");
 
+// --- the resolution ladder, pinned on a catalog with TWO codes per language ---
+// The shipped catalog has exactly one code per language, so exact-region /
+// region-less / any-region all happen to agree there and none of these branches
+// is actually exercised. These fixtures are what keep them honest: the day a
+// second regional table ships (pt_BR next to pt_PT is the live candidate), a
+// naive "first code in that language" would hand pt-PT users the Brazilian
+// table, and this is the test that would catch it.
+const MULTI = ["en", "pt_BR", "pt_PT", "zh_CN", "zh_TW"];
+ok(matchUILanguage("pt-PT", MULTI) === "pt_PT", "ladder: exact region wins (pt-PT -> pt_PT, not pt_BR)");
+ok(matchUILanguage("pt-BR", MULTI) === "pt_BR", "ladder: exact region wins (pt-BR -> pt_BR, not pt_PT)");
+ok(matchUILanguage("zh-TW", MULTI) === "zh_TW", "ladder: exact region wins (zh-TW -> zh_TW, not zh_CN)");
+ok(matchUILanguage("zh-CN", MULTI) === "zh_CN", "ladder: exact region wins (zh-CN -> zh_CN)");
+// No exact region match: fall to a region-less code for that language if one
+// exists, else the first code in that language (catalog order).
+ok(matchUILanguage("pt-AO", MULTI) === "pt_BR", "ladder: unknown region -> first code in that language");
+ok(matchUILanguage("pt", ["pt_PT", "pt_BR"]) === "pt_PT", "ladder: bare language -> first code, catalog order");
+ok(matchUILanguage("pt-AO", ["pt_BR", "pt", "pt_PT"]) === "pt", "ladder: a region-less code outranks a regional one");
+ok(matchUILanguage("zh-Hant-TW", MULTI) === "zh_TW", "ladder: script subtag ignored, region still exact (zh-Hant-TW -> zh_TW)");
+
 console.log(fails ? "FAILED" : "OK");
 process.exit(fails ? 1 : 0);

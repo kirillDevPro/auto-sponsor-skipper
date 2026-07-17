@@ -7,6 +7,7 @@
 
 import {
   DEFAULT_SETTINGS,
+  LANG_HINT_KEY,
   SETTINGS_KEY,
   STATS_KEY,
   WHITELIST_KEY
@@ -15,10 +16,13 @@ import {
 /**
  * Merge a stored (possibly partial) settings object over DEFAULT_SETTINGS.
  * @param {object|null|undefined} stored - value read from chrome.storage.sync.
+ * @param {string|null|undefined} [langHint] - the browser-locale language hint
+ *   recorded at install (chrome.storage.local LANG_HINT_KEY). Used ONLY when the
+ *   user has never picked a language; an explicit stored.language always wins.
  * @returns {object} complete settings object for UI surfaces.
  * @sideEffects None.
  */
-export function mergeSettings(stored) {
+export function mergeSettings(stored, langHint) {
   const s = stored || {};
   return {
     enabled: s.enabled !== undefined ? s.enabled : DEFAULT_SETTINGS.enabled,
@@ -35,19 +39,28 @@ export function mergeSettings(stored) {
       typeof s.showSkipNotice === "boolean"
         ? s.showSkipNotice
         : DEFAULT_SETTINGS.showSkipNotice,
+    // Explicit choice > browser-locale hint > English.
     language:
-      typeof s.language === "string" ? s.language : DEFAULT_SETTINGS.language
+      typeof s.language === "string"
+        ? s.language
+        : typeof langHint === "string"
+          ? langHint
+          : DEFAULT_SETTINGS.language
   };
 }
 
 /**
- * Load merged settings from chrome.storage.sync.
+ * Load merged settings: the synced settings object, plus the local browser-locale
+ * language hint that applies until the user picks a language.
  * @returns {Promise<object>} complete settings object.
- * @sideEffects Reads chrome.storage.sync.
+ * @sideEffects Reads chrome.storage.sync and chrome.storage.local.
  */
 export async function loadSettings() {
-  const obj = await chrome.storage.sync.get(SETTINGS_KEY);
-  return mergeSettings(obj[SETTINGS_KEY]);
+  const [synced, local] = await Promise.all([
+    chrome.storage.sync.get(SETTINGS_KEY),
+    chrome.storage.local.get(LANG_HINT_KEY)
+  ]);
+  return mergeSettings(synced[SETTINGS_KEY], local[LANG_HINT_KEY]);
 }
 
 /**
@@ -78,10 +91,53 @@ let settingsChain = Promise.resolve();
  * @sideEffects Reads and writes chrome.storage.sync through the serialized chain.
  */
 export function updateSettings(mutate) {
+  return writeSettings(mutate, false);
+}
+
+/**
+ * Persist an EXPLICIT language choice. Separate from updateSettings because a
+ * write of the language field is the one thing that must survive the
+ * hint-stripping below — this is the call that turns a hint into a choice.
+ * @param {string} code - a shipped language code.
+ * @returns {Promise<object>} the written settings.
+ * @sideEffects Reads and writes chrome.storage through the serialized chain.
+ */
+export function chooseLanguage(code) {
+  return writeSettings((s) => {
+    s.language = code;
+  }, true);
+}
+
+/**
+ * The shared body of updateSettings/chooseLanguage.
+ *
+ * The subtlety is what gets STORED. mergeSettings resolves the browser-locale
+ * hint so the caller sees the language actually on screen, but that resolved
+ * value must not be written back: the hint is machine-local, and persisting it
+ * into the synced settings item would push this browser's locale onto the
+ * user's other machines the first time they toggled any unrelated checkbox.
+ * So unless the user has an explicit choice — already stored, or being made by
+ * this very call — the language field is dropped before the write, leaving the
+ * hint to keep applying per machine.
+ * @param {(settings: object) => void} mutate
+ * @param {boolean} explicitLanguage - true when this write IS a language choice.
+ * @returns {Promise<object>} the resolved settings (language included).
+ * @sideEffects Reads and writes chrome.storage through the serialized chain.
+ */
+function writeSettings(mutate, explicitLanguage) {
   const run = settingsChain.then(async () => {
-    const settings = await loadSettings();
+    const [synced, local] = await Promise.all([
+      chrome.storage.sync.get(SETTINGS_KEY),
+      chrome.storage.local.get(LANG_HINT_KEY)
+    ]);
+    const raw = synced[SETTINGS_KEY];
+    const hadExplicitLanguage = !!(raw && typeof raw.language === "string");
+    const settings = mergeSettings(raw, local[LANG_HINT_KEY]);
     mutate(settings);
-    await saveSettings(settings);
+
+    const toStore = Object.assign({}, settings);
+    if (!explicitLanguage && !hadExplicitLanguage) delete toStore.language;
+    await saveSettings(toStore);
     return settings;
   });
   settingsChain = run.catch(() => {}); // keep the chain alive after a failure

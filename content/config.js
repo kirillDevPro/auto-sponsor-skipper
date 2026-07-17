@@ -22,6 +22,10 @@
     SETTINGS_KEY: "settings",         // chrome.storage.sync
     STATS_KEY: "skipStats",           // chrome.storage.local
     WHITELIST_KEY: "channelWhitelist", // chrome.storage.local
+    // Browser-locale language hint recorded at install by the service worker.
+    // Applies only until the user picks a language. Duplicate of
+    // shared/categories.js LANG_HINT_KEY (the classic tree can't import it).
+    LANG_HINT_KEY: "languageHint",     // chrome.storage.local
     // Per-video whitelist-decision record { videoId, whitelisted, fetchedAt } the
     // popup reads for its status line. Duplicate of shared/videoCache.js WL_PREFIX
     // (the classic tree can't import it) — keep in sync.

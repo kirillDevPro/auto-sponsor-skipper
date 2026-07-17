@@ -15,7 +15,7 @@
 // never typed as a literal. Run: node tests/i18n.test.mjs
 import { readFileSync, readdirSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { t, formatDuration, onLanguageChange, getLanguage } from "../shared/i18n.js";
+import { t, formatDuration, onLanguageChange, getLanguage, TABLES as WIRED_TABLES } from "../shared/i18n.js";
 import { LANGUAGES, LANGUAGE_CODES, FALLBACK } from "../shared/languages.js";
 import { CATEGORIES, CATEGORY_COLORS, DEFAULT_SETTINGS } from "../shared/categories.js";
 
@@ -24,7 +24,10 @@ const ok = (c, msg) => { if (!c) { console.log("[FAIL]", msg); fails++; } else c
 const U = (p) => new URL(p, import.meta.url);
 const read = (p) => readFileSync(U(p), "utf8");
 const sorted = (a) => a.slice().sort();
-const sameSet = (a, b) => a.length === b.length && sorted(a).every((v, i) => v === sorted(b)[i]);
+const sameSet = (a, b) => {
+  const [x, y] = [sorted(a), sorted(b)];
+  return x.length === y.length && x.every((v, i) => v === y[i]);
+};
 
 // The shipped contract. Adding a language = add it here + the four places below.
 const EXPECTED_CODES = ["ar", "bg", "cs", "da", "de", "el", "en", "es", "et", "fa", "fi", "fr", "hi", "it",
@@ -68,20 +71,14 @@ for (const code of LANGUAGE_CODES) {
 }
 
 // --- TABLES wiring gate: a table file that exists but was never imported into
-// shared/i18n.js makes t() serve the English value for that whole language.
-// Assert against the SOURCE (an import line per code), because comparing t() to
-// the table can't distinguish "not wired" from "value legitimately equals en".
-const i18nSrc = read("../shared/i18n.js");
+// shared/i18n.js makes t() serve the English value for that whole language --
+// silently, because a translation is ALLOWED to equal its English source, so no
+// output comparison can prove wiring. Compare the runtime map to the catalog
+// instead: one assertion, and it covers en too.
+ok(sameSet(Object.keys(WIRED_TABLES), EXPECTED_CODES),
+   "shared/i18n.js TABLES == the catalog (" + sorted(Object.keys(WIRED_TABLES)).join(",") + ")");
 for (const code of LANGUAGE_CODES) {
-  ok(i18nSrc.includes('from "./messages/' + code + '.js"'), "shared/i18n.js imports the " + code + " table");
-  ok(new RegExp("\\b" + code + "\\b").test(i18nSrc.slice(i18nSrc.indexOf("const TABLES"), i18nSrc.indexOf("const TABLES") + 400)),
-     "shared/i18n.js wires " + code + " into TABLES");
-  for (const k of enKeys) {
-    if (TABLES[code][k] !== en[k]) {
-      ok(t(code, k) === TABLES[code][k], "t(" + code + "): serves its own table, not the en fallback");
-      break;
-    }
-  }
+  ok(WIRED_TABLES[code] === TABLES[code], "shared/i18n.js wires the real " + code + " table (same module object)");
 }
 
 // --- every category has a message key ---
@@ -214,9 +211,12 @@ for (const code of LANGUAGE_CODES) {
 let listener = null;
 let removed = false;
 const syncStore = {};
+const localStore = {};
 globalThis.chrome = {
   storage: {
     sync: { async get(k) { return (k in syncStore) ? { [k]: syncStore[k] } : {}; } },
+    // loadSettings also reads the browser-locale language hint from local.
+    local: { async get(k) { return (k in localStore) ? { [k]: localStore[k] } : {}; } },
     onChanged: {
       addListener: (fn) => { listener = fn; },
       removeListener: (fn) => { if (listener === fn) { removed = true; listener = null; } }
@@ -242,6 +242,28 @@ syncStore["settings"] = { language: "ru" };
 ok((await getLanguage()) === "ru", "getLanguage: returns the stored language");
 delete syncStore["settings"];
 ok((await getLanguage()) === "en", "getLanguage: defaults to en when unset");
+// The install-time browser-locale hint fills the gap until a choice is made,
+// and never overrides one.
+localStore["languageHint"] = "uk";
+ok((await getLanguage()) === "uk", "getLanguage: uses the browser-locale hint when no choice is stored");
+syncStore["settings"] = { language: "ru" };
+ok((await getLanguage()) === "ru", "getLanguage: an explicit choice outranks the hint");
+delete syncStore["settings"];
+delete localStore["languageHint"];
+
+// --- localizePage sets <html lang> (screen readers / hyphenation) ---
+// Minimal DOM stand-in: localizePage only needs querySelectorAll + documentElement.
+{
+  const el = { lang: "" };
+  globalThis.document = { documentElement: el, querySelectorAll: () => [] };
+  globalThis.document.querySelectorAll = () => [];
+  const { localizePage } = await import("../shared/i18n.js");
+  localizePage(globalThis.document, "ru");
+  ok(el.lang === "ru", "localizePage: sets <html lang> to the selected language");
+  localizePage(globalThis.document, "pt_PT");
+  ok(el.lang === "pt-PT", "localizePage: <html lang> uses BCP-47 hyphens, not the _locales underscore");
+  delete globalThis.document;
+}
 
 // --- required DOM hooks (guards the two popup tiles + the language select) ---
 const popupHtml = read("../popup/popup.html");

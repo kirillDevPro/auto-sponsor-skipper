@@ -9,13 +9,20 @@
   const NS = self.__SBSKIP__;
   let cache = null;
 
+  // The browser-locale language hint (chrome.storage.local), which applies only
+  // until the user picks a language. Cached from load() so the sync-storage
+  // onChanged path can re-merge without a second read.
+  let langHint = null;
+
   /**
    * Merge a stored (possibly partial) settings object over DEFAULTS.
    * @param {object|null|undefined} stored - value read from chrome.storage.sync.
+   * @param {string|null} [hint] - browser-locale language hint; an explicit
+   *   stored.language always wins over it.
    * @returns {object} complete settings object used by the content script.
    * @sideEffects None.
    */
-  function merge(stored) {
+  function merge(stored, hint) {
     const d = NS.DEFAULTS;
     const s = stored || {};
     return {
@@ -29,19 +36,30 @@
           : d.showTimelineMarkers,
       showSkipNotice:
         typeof s.showSkipNotice === "boolean" ? s.showSkipNotice : d.showSkipNotice,
-      language: typeof s.language === "string" ? s.language : d.language
+      // Explicit choice > browser-locale hint > English.
+      language:
+        typeof s.language === "string"
+          ? s.language
+          : typeof hint === "string"
+            ? hint
+            : d.language
     };
   }
 
   NS.settings = {
     /**
-     * Load and cache settings from sync storage.
+     * Load and cache settings: the synced settings object plus the local
+     * browser-locale language hint.
      * @returns {Promise<object>} merged settings.
-     * @sideEffects Reads chrome.storage.sync and updates the in-memory cache.
+     * @sideEffects Reads chrome.storage.sync + chrome.storage.local, updates the cache.
      */
     async load() {
-      const obj = await chrome.storage.sync.get(NS.STORAGE.SETTINGS_KEY);
-      cache = merge(obj[NS.STORAGE.SETTINGS_KEY]);
+      const [synced, local] = await Promise.all([
+        chrome.storage.sync.get(NS.STORAGE.SETTINGS_KEY),
+        chrome.storage.local.get(NS.STORAGE.LANG_HINT_KEY)
+      ]);
+      langHint = local[NS.STORAGE.LANG_HINT_KEY] || null;
+      cache = merge(synced[NS.STORAGE.SETTINGS_KEY], langHint);
       return cache;
     },
     /**
@@ -101,7 +119,7 @@
       const prev = cache;
       // Always refresh the cache (so NS.i18n.catName sees the new language), but
       // reapply skipping/markers only when a content-relevant field changed.
-      cache = merge(changes[NS.STORAGE.SETTINGS_KEY].newValue);
+      cache = merge(changes[NS.STORAGE.SETTINGS_KEY].newValue, langHint);
       if (typeof NS.onSettingsChanged === "function" && affectsContent(prev, cache)) {
         NS.onSettingsChanged(cache);
       }

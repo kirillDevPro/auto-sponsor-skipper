@@ -55,3 +55,16 @@ export const LANGUAGE_CODES = LANGUAGES.map((l) => l.code);
 
 /** The fallback language, whose message table is guaranteed complete. */
 export const FALLBACK = "en";
+
+/**
+ * A shipped code as a BCP-47 tag. Codes are _locales directory names, which
+ * Chrome spells with underscores ("pt_PT"); everything that consumes a language
+ * tag — Intl.Locale, <html lang> — wants hyphens. This is the one place that
+ * knows the difference.
+ * @param {string} code - a shipped language code.
+ * @returns {string} the same language as a BCP-47 tag.
+ * @sideEffects None.
+ */
+export function toBcp47(code) {
+  return String(code).replace(/_/g, "-");
+}

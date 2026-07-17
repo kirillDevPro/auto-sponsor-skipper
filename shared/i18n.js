@@ -48,14 +48,18 @@ import sv from "./messages/sv.js";
 import tr from "./messages/tr.js";
 import uk from "./messages/uk.js";
 import zh_CN from "./messages/zh_CN.js";
-import { FALLBACK } from "./languages.js";
+import { FALLBACK, toBcp47 } from "./languages.js";
 import { SETTINGS_KEY } from "./categories.js";
 import { loadSettings } from "./settingsStore.js";
 
-// One entry per shared/languages.js code. tests/i18n.test.mjs asserts this map
-// matches the catalog: a table file that exists but is missing here would make
-// t() silently serve English for that whole language.
-const TABLES = {
+/**
+ * One entry per shared/languages.js code. Exported so tests/i18n.test.mjs can
+ * assert this map matches the catalog exactly: a table file that exists but is
+ * missing here would make t() silently serve English for that whole language,
+ * which no output comparison can reliably detect (a translation is allowed to
+ * equal its English source).
+ */
+export const TABLES = {
   ar, bg, cs, da, de, el, en, es, et, fa, fi, fr, hi, it, ja, ko, lt,
   no, pl, pt_PT, ro, ru, sk, sv, tr, uk, zh_CN
 };
@@ -86,6 +90,12 @@ export function t(lang, key) {
  */
 export function localizePage(root, lang) {
   const scope = root || document;
+  // Tell the browser what language the page is now in — screen-reader voice,
+  // hyphenation and spellcheck all key off this. Text direction is deliberately
+  // left alone: the layout is LTR for every shipped language.
+  if (scope === document || scope === document.documentElement) {
+    document.documentElement.lang = toBcp47(lang);
+  }
   scope.querySelectorAll("[data-i18n]").forEach((el) => {
     el.textContent = t(lang, el.dataset.i18n);
   });

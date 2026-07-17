@@ -12,7 +12,7 @@
  * matches zh_CN.
  */
 
-import { LANGUAGE_CODES, FALLBACK } from "../shared/languages.js";
+import { LANGUAGE_CODES, FALLBACK, toBcp47 } from "../shared/languages.js";
 
 /**
  * Language subtags Chrome reports that are not themselves shipped codes, mapped
@@ -32,7 +32,7 @@ const ALIASES = { nb: "no", nn: "no" };
  */
 function parse(tag) {
   try {
-    const loc = new Intl.Locale(String(tag).replace(/_/g, "-"));
+    const loc = new Intl.Locale(toBcp47(tag));
     return { language: loc.language, region: loc.region || null };
   } catch {
     return null; // not a well-formed tag — the caller falls back
@@ -62,8 +62,9 @@ export function matchUILanguage(uiLang, codes) {
   if (!want) return FALLBACK;
   const language = ALIASES[want.language] || want.language;
 
-  const supported = codes.map((code) => ({ code, ...parse(code) })).filter((s) => s.language);
-  const sameLanguage = supported.filter((s) => s.language === language);
+  const sameLanguage = codes
+    .map((code) => ({ code, ...parse(code) }))
+    .filter((s) => s.language === language);
   if (sameLanguage.length === 0) return FALLBACK;
 
   const exact = sameLanguage.find((s) => s.region === want.region);

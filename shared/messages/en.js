@@ -1,14 +1,17 @@
 /**
  * shared/messages/en.js — English UI strings (the source-of-truth locale for the
- * in-page popup and options runtime). Every message table in this folder
- * (en/uk/ru) MUST carry the identical key set; tests/i18n.test.mjs fails on drift.
+ * in-page popup and options runtime). Every table in this folder — one per code
+ * in shared/languages.js — MUST carry this exact key set, in this order;
+ * tests/i18n.test.mjs fails on drift.
  *
  * These are the IN-PAGE strings only. The manifest name/description live
  * separately in _locales/ (native chrome.i18n, browser-locale for the Chrome
  * Web Store listing). `extName` is intentionally in BOTH places: the popup <h1>
  * localizes it in-page, the manifest localizes it for chrome://extensions.
- * `extName` is a brand name — keep it byte-identical across en/uk/ru (never
- * translate it).
+ * `extName` is a brand name — byte-identical in every shipped table, never
+ * translated (tests/localeQuality.test.mjs enforces it, along with the tokens
+ * that must survive translation verbatim: the license id, sponsor.ajay.app,
+ * @channelname, and the em-dash title prefix).
  */
 
 export default {
