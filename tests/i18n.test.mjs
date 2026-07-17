@@ -273,6 +273,57 @@ ok(calls.length === 1, "onLanguageChange: a non-sync area is ignored");
   delete syncStore["settings"];
 }
 
+// REGRESSION: an explicit switch must not depend on a second storage read --
+// neither for ordering nor for success.
+{
+  delete syncStore["settings"];
+  localStore["languageHint"] = "uk";
+  const raced = [];
+  const stop = onLanguageChange("uk", (l) => raced.push(l));
+
+  // Two switches in quick succession. The first fires a hint read (no language
+  // field); the second carries an explicit language. Make the read resolve LATE,
+  // after the second event has already been handled: without a generation guard
+  // the stale read lands last and leaves the page on the superseded language.
+  const realGet = globalThis.chrome.storage.sync.get;
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  // Snapshot at CALL time, resolve later: a storage read reflects the state when
+  // it was served, which can be older than the state by the time it lands.
+  globalThis.chrome.storage.sync.get = async (k) => {
+    const snapshot = (k in syncStore) ? { [k]: JSON.parse(JSON.stringify(syncStore[k])) } : {};
+    await gate;
+    return snapshot;
+  };
+
+  syncStore["settings"] = { enabled: false };
+  listener({ settings: { newValue: { enabled: false } } }, "sync"); // hint path, read stalls
+  syncStore["settings"] = { language: "ru" };
+  listener({ settings: { newValue: { language: "ru" } } }, "sync"); // explicit, answers immediately
+  await settle();
+  ok(raced.length === 1 && raced[0] === "ru", "onLanguageChange: an explicit switch applies without waiting on a read");
+
+  release();
+  await settle();
+  await settle();
+  ok(raced[raced.length - 1] === "ru",
+     "onLanguageChange: a stale in-flight read cannot override a newer change (got " + JSON.stringify(raced) + ")");
+
+  // A failing read must not swallow a later explicit switch either.
+  globalThis.chrome.storage.sync.get = async () => { throw new Error("storage down"); };
+  syncStore["settings"] = { language: "en" };
+  listener({ settings: { newValue: { enabled: true } } }, "sync"); // hint path -> read rejects
+  await settle();
+  listener({ settings: { newValue: { language: "en" } } }, "sync"); // explicit -> must still apply
+  await settle();
+  ok(raced[raced.length - 1] === "en", "onLanguageChange: a rejected read does not swallow a later explicit switch");
+
+  globalThis.chrome.storage.sync.get = realGet;
+  stop();
+  delete localStore["languageHint"];
+  delete syncStore["settings"];
+}
+
 unsub();
 ok(removed === true, "onLanguageChange: unsubscribe removes the listener");
 

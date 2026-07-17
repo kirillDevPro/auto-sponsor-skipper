@@ -145,29 +145,54 @@ export async function getLanguage() {
  * changes, so an unrelated settings write (enable / categories / min-length)
  * never re-localizes the page.
  *
- * It re-resolves through loadSettings rather than reading the change record's
- * newValue.language directly: a user who has never picked a language has no
- * language field in storage at all (it is resolved from the machine-local hint),
- * so an absent field means "unchanged", NOT "English" — reading it literally
- * flipped hint-language users to English the moment they toggled any checkbox.
+ * The record's newValue.language cannot simply be trusted: a user who has never
+ * picked a language has NO language field in storage — theirs resolves from the
+ * machine-local hint — so an absent field means "unchanged", not "English".
+ * But when the field IS present it is the whole answer, so the common case (the
+ * user switching languages) is handled straight from the record: no second
+ * round-trip to race, and no storage failure that can swallow their switch.
+ * Only the hint case asks storage, and a generation counter drops a read that a
+ * newer event has already superseded.
  * @param {string} initialLang - the caller's current language.
  * @param {(lang: string) => void} handler - called with the new language code.
  * @returns {() => void} an unsubscribe function.
  * @sideEffects Registers a chrome.storage.onChanged listener until unsubscribed;
- *   reads storage when a settings change arrives.
+ *   reads storage only when the changed settings carry no language field.
  */
 export function onLanguageChange(initialLang, handler) {
   let currentLang = initialLang || FALLBACK;
+  let generation = 0;
+
+  /**
+   * Apply a resolved language, if it is actually a change.
+   * @param {string} lang - the effective language code.
+   * @returns {void}
+   */
+  const applyLanguage = (lang) => {
+    if (lang === currentLang) return;
+    currentLang = lang;
+    handler(lang);
+  };
+
   const listener = (changes, area) => {
     if (area !== "sync" || !changes[SETTINGS_KEY]) return;
+    const stored = changes[SETTINGS_KEY].newValue;
+    const explicit = stored && stored.language;
+
+    if (typeof explicit === "string") {
+      generation++; // supersede any hint read still in flight
+      applyLanguage(explicit);
+      return;
+    }
+
+    // No stored language: it comes from the hint, which lives in another area.
+    const gen = ++generation;
     loadSettings()
       .then((settings) => {
-        const newLang = settings.language;
-        if (newLang === currentLang) return;
-        currentLang = newLang;
-        handler(newLang);
+        if (gen !== generation) return; // a newer change already answered this
+        applyLanguage(settings.language);
       })
-      .catch(() => {}); // a failed read just leaves the page in its current language
+      .catch(() => {}); // a failed read leaves the page in its current language
   };
   chrome.storage.onChanged.addListener(listener);
   return () => chrome.storage.onChanged.removeListener(listener);
