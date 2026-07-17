@@ -1,0 +1,185 @@
+// Headless: is each shipped translation actually a usable translation? Syntax
+// checks prove a file parses, not that it says anything real, and nobody here
+// reads 27 languages -- so these are the checks that stand in for a proofreader:
+// contract invariants (the brand, the verbatim tokens the UI and the license
+// depend on), byte hygiene (BOM / mojibake / bidi controls), writing-system
+// identity (Japanese must actually contain kana), and an anti-copy ratio that
+// catches a table that is still English.
+//
+// Runs over the repo by default. Point it at a staging tree before importing new
+// locales:  LOCALE_ROOT=/path/to/staging node tests/localeQuality.test.mjs
+// (English always loads from the repo -- it is the comparison baseline.)
+import { readFileSync, readdirSync, existsSync } from "node:fs";
+import { fileURLToPath } from "node:url";
+
+let fails = 0;
+const ok = (c, msg) => { if (!c) { console.log("[FAIL]", msg); fails++; } else console.log("[PASS]", msg); };
+
+const repoRoot = new URL("../", import.meta.url);
+const root = process.env.LOCALE_ROOT
+  ? new URL("file:///" + process.env.LOCALE_ROOT.replace(/\\/g, "/").replace(/\/?$/, "/"))
+  : repoRoot;
+const rel = (base, p) => new URL(p, base);
+
+const en = (await import(rel(repoRoot, "shared/messages/en.js").href)).default;
+const enLocale = JSON.parse(readFileSync(rel(repoRoot, "_locales/en/messages.json"), "utf8"));
+
+const messagesDir = rel(root, "shared/messages/");
+const codes = readdirSync(messagesDir).filter((f) => f.endsWith(".js")).map((f) => f.slice(0, -3)).sort();
+ok(codes.length > 0, "found message tables to check under " + fileURLToPath(messagesDir) + " (" + codes.join(",") + ")");
+
+// Values that are contractually NOT translated, so they must be excluded from
+// any "did they actually translate it" measurement.
+const INVARIANT_KEYS = new Set(["extName", "settings_whitelist_placeholder"]);
+const translatable = Object.keys(en).filter((k) => !INVARIANT_KEYS.has(k));
+
+// Writing system each language must actually be written in. A translation that
+// comes back in Latin script for these is either untranslated or transliterated
+// -- both are defects a reader of that language would immediately see.
+// ASCII-only source (repo convention, and a literal NUL/BOM/bidi char in here
+// would make git treat this whole file as binary and stop diffing it): every
+// range below is written as an escape.
+const ARABIC = /[\u0600-\u06FF]/;
+const CYRILLIC = /[\u0400-\u04FF]/;
+const GREEK = /[\u0370-\u03FF]/;
+const DEVANAGARI = /[\u0900-\u097F]/;
+const KANA = /[\u3040-\u30FF]/;
+const HAN = /[\u4E00-\u9FFF]/;
+const HANGUL = /[\uAC00-\uD7AF]/;
+const CJK = /[\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]/;
+const SCRIPT = {
+  ar: { name: "Arabic", re: ARABIC },
+  fa: { name: "Arabic (Persian)", re: ARABIC },
+  bg: { name: "Cyrillic", re: CYRILLIC },
+  ru: { name: "Cyrillic", re: CYRILLIC },
+  uk: { name: "Cyrillic", re: CYRILLIC },
+  el: { name: "Greek", re: GREEK },
+  hi: { name: "Devanagari", re: DEVANAGARI },
+  ja: { name: "Kana/Han", re: /[\u3040-\u30FF\u4E00-\u9FFF]/ },
+  ko: { name: "Hangul", re: HANGUL },
+  zh_CN: { name: "Han", re: HAN }
+};
+// Any of these rendering in the UI is a bug: U+FFFD means the bytes were already
+// mangled, and a stray bidi control reorders text unpredictably.
+const BIDI = /[\u200E\u200F\u061C\u202A-\u202E\u2066-\u2069]/;
+const BOM = "\uFEFF";
+const REPLACEMENT = "\uFFFD";
+
+/** @param {string} s @returns {string} a short, log-safe excerpt */
+const excerpt = (s) => (s.length > 48 ? s.slice(0, 48) + "..." : s);
+
+for (const code of codes) {
+  const file = rel(root, "shared/messages/" + code + ".js");
+  const raw = readFileSync(file, "utf8");
+  const table = (await import(file.href)).default;
+
+  // --- byte hygiene ---
+  ok(!raw.startsWith(BOM), code + ": no BOM");
+  ok(!raw.includes(REPLACEMENT), code + ": no U+FFFD replacement chars (mojibake)");
+  ok(!raw.includes("\0"), code + ": no NUL bytes");
+
+  // --- key parity + shape ---
+  // tests/i18n.test.mjs owns this for the SHIPPED tree; it is repeated here only
+  // for the staging pass (LOCALE_ROOT), where a table has not reached the repo
+  // yet and nothing else has checked it.
+  if (process.env.LOCALE_ROOT) {
+    const keys = Object.keys(table);
+    const enKeys = Object.keys(en);
+    ok(keys.length === enKeys.length && keys.every((k, i) => k === enKeys[i]),
+       code + ": same keys, same order as en (" + enKeys.length + ")");
+    const bad = Object.entries(table).filter(([, v]) => typeof v !== "string" || v.trim() === "");
+    ok(bad.length === 0, code + ": every value is a non-empty string (" + bad.map(([k]) => k).join(",") + ")");
+  }
+
+  // --- contract invariants ---
+  ok(table.extName === "Auto Sponsor Skipper", code + ": extName is the untranslated brand");
+  ok(table.settings_whitelist_placeholder === "@channelname", code + ": whitelist placeholder is literal");
+  ok(typeof table.settings_title === "string" && table.settings_title.startsWith("Auto Sponsor Skipper \u2014 "),
+     code + ": settings_title keeps the brand + em-dash prefix");
+  for (const token of ["SponsorBlock", "sponsor.ajay.app", "CC BY-NC-SA 4.0"]) {
+    ok(table.attribution.includes(token), code + ": attribution keeps '" + token + "' verbatim");
+  }
+  for (const token of ["SponsorBlock", "YouTube", "Google"]) {
+    ok(table.not_affiliated.includes(token), code + ": not_affiliated keeps '" + token + "' verbatim");
+  }
+  for (const token of ["SponsorBlock", "Chrome"]) {
+    ok(table.privacy_note.includes(token), code + ": privacy_note keeps '" + token + "' verbatim");
+  }
+  ok(table.settings_whitelist_hint.includes("@channelname") && table.settings_whitelist_hint.includes("channel/UC"),
+     code + ": whitelist hint keeps the literal input examples");
+  ok(table.popup_status_checking.includes("\u2026"), code + ": popup_status_checking keeps the ellipsis");
+
+  // --- no markup, no bidi controls, in any value ---
+  const markup = Object.entries(table).filter(([, v]) => v.includes("<") || v.includes(">"));
+  ok(markup.length === 0, code + ": no < or > in any value (" + markup.map(([k]) => k).join(",") + ")");
+  const bidi = Object.entries(table).filter(([, v]) => BIDI.test(v));
+  ok(bidi.length === 0, code + ": no Unicode bidi control chars (" + bidi.map(([k]) => k).join(",") + ")");
+
+  // --- the stat tiles are narrow: a unit label is an abbreviation, not a word ---
+  for (const k of ["duration_hour_short", "duration_minute_short", "duration_second_short"]) {
+    ok([...table[k]].length <= 4, code + ": " + k + " is a short abbreviation ('" + table[k] + "')");
+  }
+
+  // --- writing-system identity ---
+  const script = SCRIPT[code];
+  if (script) {
+    const checked = translatable.filter((k) => !k.startsWith("duration_"));
+    const inScript = checked.filter((k) => script.re.test(table[k]));
+    const ratio = inScript.length / checked.length;
+    ok(ratio >= 0.8, code + ": written in " + script.name + " (" + Math.round(ratio * 100) + "% of values)");
+  } else {
+    // A Latin-script language must not come back in the wrong script entirely.
+    const wrong = translatable.filter((k) => CYRILLIC.test(table[k]) || CJK.test(table[k]));
+    ok(wrong.length === 0, code + ": Latin-script language has no stray Cyrillic/CJK (" + wrong.join(",") + ")");
+  }
+  if (code === "ja") {
+    // Han alone cannot tell Japanese from Chinese, and both would satisfy the
+    // script check above. Real Japanese UI text carries kana (particles, verb
+    // endings) throughout, so require it broadly rather than just once.
+    const checked = translatable.filter((k) => !k.startsWith("duration_"));
+    const withKana = checked.filter((k) => KANA.test(table[k]));
+    ok(withKana.length / checked.length >= 0.3,
+       "ja: kana throughout (" + Math.round((withKana.length / checked.length) * 100) + "% of values) - not Chinese mislabelled as Japanese");
+  }
+  if (code === "zh_CN") {
+    const kana = translatable.filter((k) => KANA.test(table[k]));
+    ok(kana.length === 0, "zh_CN: contains no Japanese kana (" + kana.join(",") + ")");
+  }
+
+  // --- anti-copy: a table that is still (mostly) English ---
+  if (code !== "en") {
+    const differ = translatable.filter((k) => table[k] !== en[k]);
+    const ratio = differ.length / translatable.length;
+    ok(ratio >= 0.5, code + ": is actually translated, not a copy of en (" + Math.round(ratio * 100) + "% of values differ)");
+    const identical = translatable.filter((k) => table[k] === en[k] && !/^(cat_|duration_)/.test(k));
+    ok(identical.length <= 6, code + ": few non-category values left identical to en (" + identical.map((k) => k + "='" + excerpt(table[k]) + "'").join(", ") + ")");
+  }
+
+  // --- the _locales half of the same language ---
+  const locFile = rel(root, "_locales/" + code + "/messages.json");
+  ok(existsSync(locFile), code + ": has a _locales/" + code + "/messages.json");
+  if (existsSync(locFile)) {
+    // The _locales SCHEMA (key set, brand, non-empty) is owned by
+    // tests/i18n.test.mjs, which pins the catalog contract. Only the
+    // translation-quality half lives here.
+    const locRaw = readFileSync(locFile, "utf8");
+    ok(!locRaw.startsWith(BOM), code + ": _locales file has no BOM");
+    ok(!locRaw.includes(REPLACEMENT), code + ": _locales file has no mojibake");
+    const loc = JSON.parse(locRaw);
+    ok(!BIDI.test(loc.extDescription.message), code + ": _locales extDescription has no bidi controls");
+    // The description fields are English metadata for translators, not UI text.
+    ok(loc.extName.description === enLocale.extName.description &&
+       loc.extDescription.description === enLocale.extDescription.description,
+       code + ": _locales description metadata matches en (stays English)");
+    if (code !== "en") {
+      ok(loc.extDescription.message !== enLocale.extDescription.message,
+         code + ": _locales extDescription is translated, not copied from en");
+    }
+    if (script) {
+      ok(script.re.test(loc.extDescription.message), code + ": _locales extDescription is written in " + script.name);
+    }
+  }
+}
+
+console.log(fails ? "FAILED" : "OK");
+process.exit(fails ? 1 : 0);

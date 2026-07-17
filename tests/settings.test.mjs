@@ -32,18 +32,76 @@ ok(mergeSettings({ language: "ru" }).language === "ru", "shared: language preser
 ok(mergeSettings({ enabled: false }).language === "en", "shared: other-field write keeps default language");
 ok(mergeSettings(mergeSettings({ language: "uk" })).language === "uk", "shared: language survives a read-fresh re-merge");
 
+// --- shared: the browser-locale hint fills the gap, an explicit choice outranks it ---
+ok(mergeSettings({}, "uk").language === "uk", "shared: no choice -> the hint applies");
+ok(mergeSettings({ language: "ru" }, "uk").language === "ru", "shared: an explicit choice beats the hint");
+ok(mergeSettings({ language: "en" }, "uk").language === "en", "shared: an explicit en beats the hint (not re-detected)");
+ok(mergeSettings({}, undefined).language === "en", "shared: no choice, no hint -> en");
+// The hint must not leak into any other field, and a re-merge of a merged object
+// (the write-back round trip) must not treat the resolved language as a hint.
+ok(mergeSettings({ enabled: false }, "uk").enabled === false, "shared: the hint does not disturb other fields");
+
 // --- shared: minSegmentLength default is 3 (segments shorter are ignored); 0 still means skip-all ---
 ok(DEFAULT_SETTINGS.minSegmentLength === 3, "DEFAULT_SETTINGS.minSegmentLength default is 3");
 ok(mergeSettings({}).minSegmentLength === 3, "shared: absent minSegmentLength -> default 3");
 ok(mergeSettings({ minSegmentLength: 0 }).minSegmentLength === 0, "shared: explicit 0 (skip all) preserved");
 ok(mergeSettings({ minSegmentLength: 10 }).minSegmentLength === 10, "shared: explicit minSegmentLength preserved");
 
+// --- the hint must never be PERSISTED into synced settings ---
+// mergeSettings resolves the hint so the UI shows the right language, and
+// updateSettings writes its merged result back — so without care, toggling any
+// unrelated checkbox would bake this machine's browser locale into sync and push
+// it onto the user's other machines. Only an explicit choice may be stored.
+{
+  const sync = {};
+  const local = { languageHint: "uk" };
+  globalThis.chrome = {
+    storage: {
+      sync: {
+        async get(k) { return k in sync ? { [k]: sync[k] } : {}; },
+        async set(o) { Object.assign(sync, o); }
+      },
+      local: { async get(k) { return k in local ? { [k]: local[k] } : {}; } }
+    }
+  };
+  const { updateSettings, chooseLanguage } = await import("../shared/settingsStore.js");
+
+  const view = await updateSettings((s) => { s.categories.intro = false; });
+  ok(sync.settings.language === undefined,
+     "store: an unrelated write does NOT persist the hint (it stays machine-local)");
+  ok(sync.settings.categories.intro === false, "store: the unrelated write itself persisted");
+  ok(view.language === "uk", "store: the caller still sees the hint-resolved language");
+
+  const chosen = await chooseLanguage("ru");
+  ok(sync.settings.language === "ru", "store: chooseLanguage persists an explicit choice");
+  ok(chosen.language === "ru", "store: chooseLanguage returns the new language");
+
+  await updateSettings((s) => { s.enabled = false; });
+  ok(sync.settings.language === "ru", "store: a later unrelated write keeps the explicit choice");
+
+  // Explicitly picking the language that merely matched the hint must still
+  // record a choice, or a later browser-locale change would silently move them.
+  const sync2 = {};
+  const local2 = { languageHint: "uk" };
+  globalThis.chrome.storage.sync = {
+    async get(k) { return k in sync2 ? { [k]: sync2[k] } : {}; },
+    async set(o) { Object.assign(sync2, o); }
+  };
+  globalThis.chrome.storage.local = { async get(k) { return k in local2 ? { [k]: local2[k] } : {}; } };
+  await chooseLanguage("uk");
+  ok(sync2.settings.language === "uk", "store: choosing the same language as the hint still records a choice");
+  delete globalThis.chrome;
+}
+
 // --- content/settingsClient merge (content read path) ---
 const self = { __SBSKIP__: {} };
 const syncStore = {};
+const localStore = {};
 const chrome = {
   storage: {
     sync: { async get(k) { return k in syncStore ? { [k]: syncStore[k] } : {}; } },
+    // The content client also reads the install-time browser-locale language hint.
+    local: { async get(k) { return k in localStore ? { [k]: localStore[k] } : {}; } },
     onChanged: { addListener() {} }
   }
 };
@@ -80,6 +138,22 @@ syncStore["settings"] = { enabled: false }; // partial object, no language
 await self.__SBSKIP__.settings.load();
 ok(self.__SBSKIP__.settings.get().language === "en", "content: partial settings -> default language en");
 
+// content: the browser-locale hint applies until an explicit choice exists, so
+// the tooltip/skip-notice follow the same precedence as the popup and options.
+localStore["languageHint"] = "uk";
+await self.__SBSKIP__.settings.load();
+ok(self.__SBSKIP__.settings.get().language === "uk", "content: no choice -> the hint applies");
+
+syncStore["settings"] = { language: "ru" };
+await self.__SBSKIP__.settings.load();
+ok(self.__SBSKIP__.settings.get().language === "ru", "content: an explicit choice beats the hint");
+
+// A sync change record re-merges against the cached hint rather than dropping it.
+delete syncStore["settings"];
+await self.__SBSKIP__.settings.load();
+ok(self.__SBSKIP__.settings.get().language === "uk", "content: hint still applies after a reload with no choice");
+delete localStore["languageHint"];
+
 // --- content: a language-ONLY change must NOT trigger onSettingsChanged (which
 //     resets the skip cooldown); a skip/marker-relevant change must ---
 {
@@ -89,6 +163,7 @@ ok(self.__SBSKIP__.settings.get().language === "en", "content: partial settings 
   const chrome2 = {
     storage: {
       sync: { async get(k) { return k in store2 ? { [k]: store2[k] } : {}; } },
+      local: { async get() { return {}; } },
       onChanged: { addListener(fn) { captured = fn; } }
     }
   };

@@ -4,14 +4,15 @@
  * language selector, minimum-segment-length input, and per-category checkboxes.
  *
  * options_ui uses open_in_tab, so this page can live for a long time. Every
- * write is a read-fresh-modify-write via updateSettings so it can't clobber a
- * concurrent change from the popup, and a chrome.storage.onChanged listener
- * refreshes the controls when settings change elsewhere.
+ * write uses the read-fresh serialized settings helpers so it does not write a
+ * long-lived stale snapshot over a popup change. A chrome.storage.onChanged
+ * listener refreshes the controls when settings change elsewhere.
  */
 
 import { CATEGORIES, SETTINGS_KEY } from "../shared/categories.js";
-import { loadSettings, updateSettings } from "../shared/settingsStore.js";
-import { t, localizePage, LANGUAGES, onLanguageChange } from "../shared/i18n.js";
+import { LANGUAGES } from "../shared/languages.js";
+import { chooseLanguage, loadSettings, updateSettings } from "../shared/settingsStore.js";
+import { t, localizePage, onLanguageChange } from "../shared/i18n.js";
 
 /**
  * Briefly flash a "Saved" indicator next to the general controls.
@@ -61,8 +62,9 @@ export async function initGlobal() {
   }
 
   // Language selector: populate from the shipped languages (endonym labels),
-  // reflect the stored choice, and persist on change. The write triggers
-  // storage.onChanged -> onLanguageChange (below), which re-localizes the page.
+  // reflect the effective language, and persist an explicit choice on change.
+  // The write triggers storage.onChanged -> onLanguageChange (below), which
+  // re-localizes the page.
   for (const { code, name } of LANGUAGES) {
     const opt = document.createElement("option");
     opt.value = code;
@@ -71,9 +73,9 @@ export async function initGlobal() {
   }
   langEl.value = settings.language;
   langEl.addEventListener("change", async () => {
-    settings = await updateSettings((s) => {
-      s.language = langEl.value;
-    });
+    // chooseLanguage, not updateSettings: this is the call that records an
+    // explicit choice, which from here on outranks the browser-locale hint.
+    settings = await chooseLanguage(langEl.value);
     flashSaved();
   });
 
@@ -150,7 +152,7 @@ export async function initGlobal() {
   });
 
   // Re-localize the static page + category labels (data-i18n) live when the
-  // language changes — fires only on an actual settings.language change. Also
+  // effective language changes after a synced settings event. Also
   // reflect it in the selector: syncControls skips langEl while it is focused,
   // which would otherwise leave the control out of step after an external change.
   onLanguageChange(settings.language, (lang) => {

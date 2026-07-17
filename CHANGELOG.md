@@ -2,6 +2,11 @@
 
 All notable changes to Auto Sponsor Skipper are documented here. This project follows [semantic versioning](https://semver.org/).
 
+## 1.6.0
+- 27 interface languages, up from 3: العربية, Български, Čeština, Dansk, Deutsch, Ελληνικά, English, Español, Eesti, فارسی, Suomi, Français, हिन्दी, Italiano, 日本語, 한국어, Lietuvių, Norsk, Polski, Português, Română, Русский, Slovenčina, Svenska, Türkçe, Українська, 中文 (简体).
+- New installs now start in your browser's language instead of English, when it is one of the 27. Your own choice in Settings always wins and is never overwritten — and if you had never picked a language, you get your own one on this update.
+- The extension's name and description in `chrome://extensions` and the Chrome Web Store are now shown in your language too.
+
 ## 1.5.0
 - The popup now tells you what will actually be skipped on the video you're watching — "Will skip: 3" — or, when nothing will be, exactly why: skipping is off, the channel is whitelisted, those segment categories are turned off, the segments are shorter than your minimum length, none are marked yet, or the data failed to load.
 - The skip notice now shows how long the skipped segment was (e.g. "Skipped: Sponsor · 1:04"), stays on screen while your pointer is over it so it can't vanish as you reach for **Undo**, and announces each skip to screen readers.

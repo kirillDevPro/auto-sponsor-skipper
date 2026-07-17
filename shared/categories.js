@@ -43,7 +43,7 @@ export const CATEGORY_IDS = CATEGORIES.map((c) => c.id);
  */
 export const CATEGORY_COLORS = Object.fromEntries(CATEGORIES.map((c) => [c.id, c.color]));
 
-/** Default settings object stored under SETTINGS_KEY in chrome.storage.sync. */
+/** Defaults for resolving the possibly partial object stored under SETTINGS_KEY. */
 export const DEFAULT_SETTINGS = {
   enabled: true,
   categories: Object.fromEntries(CATEGORIES.map((c) => [c.id, c.defaultOn])),
@@ -51,13 +51,24 @@ export const DEFAULT_SETTINGS = {
   showTimelineMarkers: true,
   // Show a brief "skipped — undo" notice over the player after each skip.
   showSkipNotice: true,
-  // Selected UI language for the in-page popup/options runtime (shared/i18n.js);
-  // "en" default is independent of the browser locale. Not read by the SW.
+  // English fallback for the in-page popup/options runtime (shared/i18n.js).
+  // The stored object omits language until the user makes an explicit choice,
+  // allowing the browser-locale hint (LANG_HINT_KEY) to take precedence here.
   language: "en"
 };
 
-/** chrome.storage.sync key holding the DEFAULT_SETTINGS-shaped object. */
+/** chrome.storage.sync key holding a partial DEFAULT_SETTINGS-shaped object. */
 export const SETTINGS_KEY = "settings";
+/**
+ * chrome.storage.LOCAL key holding the browser-locale language hint the service
+ * worker detects on install or update (background/firstRunLanguage.js). Deliberately
+ * NOT part of the settings object and deliberately NOT synced: it describes THIS
+ * browser's UI locale, which differs per machine, and keeping it out of the
+ * synced settings item means locale detection can never overwrite settings
+ * that Chrome Sync is restoring at that moment. It only ever applies when the
+ * user has made no explicit choice — settings.language outranks it.
+ */
+export const LANG_HINT_KEY = "languageHint";
 /** chrome.storage.local key holding { count, seconds }. */
 export const STATS_KEY = "skipStats";
 /** chrome.storage.local key holding an array of channel ids/handles. */

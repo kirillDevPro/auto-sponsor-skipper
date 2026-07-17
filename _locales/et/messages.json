@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Auto Sponsor Skipper",
+    "description": "Extension name shown in Chrome and the Web Store. Brand name — keep identical across all _locales."
+  },
+  "extDescription": {
+    "message": "Jätab YouTube'is automaatselt vahele sponsori-, enesereklaami- ja meeldetuletuslõigud, kasutades SponsorBlocki kogukonna andmeid. Jälgimist ei toimu.",
+    "description": "Extension description / store subtitle."
+  }
+}
