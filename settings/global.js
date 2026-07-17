@@ -10,8 +10,9 @@
  */
 
 import { CATEGORIES, SETTINGS_KEY } from "../shared/categories.js";
+import { LANGUAGES } from "../shared/languages.js";
 import { loadSettings, updateSettings } from "../shared/settingsStore.js";
-import { t, localizePage, LANGUAGES, onLanguageChange } from "../shared/i18n.js";
+import { t, localizePage, onLanguageChange } from "../shared/i18n.js";
 
 /**
  * Briefly flash a "Saved" indicator next to the general controls.

@@ -9,27 +9,29 @@
  * tree cannot import modules, so it carries its own tiny category-name duplicate
  * in content/i18nStrings.js (kept in sync, like DEFAULTS / CATEGORY_COLORS).
  *
+ * Static, not dynamic, on purpose: t() is synchronous and runs inside render
+ * loops (localizePage per element), so a lazily-imported table would make the
+ * whole call chain async. The fallback chain needs `en` loaded next to the
+ * selected table anyway, and the tables are small literals read from local disk.
+ * The language CATALOG lives in shared/languages.js so the service worker can
+ * read it without importing any of these tables.
+ *
  * t / localizePage / formatDuration have no chrome.storage dependency and are
  * testable headlessly. getLanguage / onLanguageChange touch chrome inside their
  * bodies only, so importing this module in Node stays safe.
  */
 
 import en from "./messages/en.js";
-import uk from "./messages/uk.js";
 import ru from "./messages/ru.js";
+import uk from "./messages/uk.js";
+import { FALLBACK } from "./languages.js";
 import { SETTINGS_KEY } from "./categories.js";
 import { loadSettings } from "./settingsStore.js";
 
-/** Shipped UI languages, in menu order. `name` is the endonym (never translated). */
-export const LANGUAGES = [
-  { code: "en", name: "English" },
-  { code: "uk", name: "Українська" },
-  { code: "ru", name: "Русский" }
-];
-
-const TABLES = { en, uk, ru };
-/** The fallback language whose table is guaranteed complete. */
-const FALLBACK = "en";
+// One entry per shared/languages.js code. tests/i18n.test.mjs asserts this map
+// matches the catalog: a table file that exists but is missing here would make
+// t() silently serve English for that whole language.
+const TABLES = { en, ru, uk };
 
 /**
  * Look up a localized string with a selected -> en -> key fallback chain.
