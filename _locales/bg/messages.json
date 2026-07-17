@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Auto Sponsor Skipper",
+    "description": "Extension name shown in Chrome and the Web Store. Brand name — keep identical across all _locales."
+  },
+  "extDescription": {
+    "message": "Автоматично прескача сегменти със спонсори, самореклама и напомняния в YouTube чрез общностните данни на SponsorBlock. Без проследяване.",
+    "description": "Extension description / store subtitle."
+  }
+}

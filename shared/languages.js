@@ -21,9 +21,33 @@
  * translated and never localized into the current UI language.
  */
 export const LANGUAGES = [
+  { code: "ar", name: "العربية" },
+  { code: "bg", name: "Български" },
+  { code: "cs", name: "Čeština" },
+  { code: "da", name: "Dansk" },
+  { code: "de", name: "Deutsch" },
+  { code: "el", name: "Ελληνικά" },
   { code: "en", name: "English" },
+  { code: "es", name: "Español" },
+  { code: "et", name: "Eesti" },
+  { code: "fa", name: "فارسی" },
+  { code: "fi", name: "Suomi" },
+  { code: "fr", name: "Français" },
+  { code: "hi", name: "हिन्दी" },
+  { code: "it", name: "Italiano" },
+  { code: "ja", name: "日本語" },
+  { code: "ko", name: "한국어" },
+  { code: "lt", name: "Lietuvių" },
+  { code: "no", name: "Norsk" },
+  { code: "pl", name: "Polski" },
+  { code: "pt_PT", name: "Português" },
+  { code: "ro", name: "Română" },
   { code: "ru", name: "Русский" },
-  { code: "uk", name: "Українська" }
+  { code: "sk", name: "Slovenčina" },
+  { code: "sv", name: "Svenska" },
+  { code: "tr", name: "Türkçe" },
+  { code: "uk", name: "Українська" },
+  { code: "zh_CN", name: "中文 (简体)" }
 ];
 
 /** Just the codes, in LANGUAGES order. */

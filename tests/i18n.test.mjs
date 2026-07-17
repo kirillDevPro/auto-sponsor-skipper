@@ -27,7 +27,8 @@ const sorted = (a) => a.slice().sort();
 const sameSet = (a, b) => a.length === b.length && sorted(a).every((v, i) => v === sorted(b)[i]);
 
 // The shipped contract. Adding a language = add it here + the four places below.
-const EXPECTED_CODES = ["en", "ru", "uk"];
+const EXPECTED_CODES = ["ar", "bg", "cs", "da", "de", "el", "en", "es", "et", "fa", "fi", "fr", "hi", "it",
+                        "ja", "ko", "lt", "no", "pl", "pt_PT", "ro", "ru", "sk", "sv", "tr", "uk", "zh_CN"];
 
 // --- the FOUR places a language code must appear, all identical ---
 // A code present in one place and missing in another is the drift this whole

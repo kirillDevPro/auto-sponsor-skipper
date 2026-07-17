@@ -21,9 +21,33 @@
  * bodies only, so importing this module in Node stays safe.
  */
 
+import ar from "./messages/ar.js";
+import bg from "./messages/bg.js";
+import cs from "./messages/cs.js";
+import da from "./messages/da.js";
+import de from "./messages/de.js";
+import el from "./messages/el.js";
 import en from "./messages/en.js";
+import es from "./messages/es.js";
+import et from "./messages/et.js";
+import fa from "./messages/fa.js";
+import fi from "./messages/fi.js";
+import fr from "./messages/fr.js";
+import hi from "./messages/hi.js";
+import it from "./messages/it.js";
+import ja from "./messages/ja.js";
+import ko from "./messages/ko.js";
+import lt from "./messages/lt.js";
+import no from "./messages/no.js";
+import pl from "./messages/pl.js";
+import pt_PT from "./messages/pt_PT.js";
+import ro from "./messages/ro.js";
 import ru from "./messages/ru.js";
+import sk from "./messages/sk.js";
+import sv from "./messages/sv.js";
+import tr from "./messages/tr.js";
 import uk from "./messages/uk.js";
+import zh_CN from "./messages/zh_CN.js";
 import { FALLBACK } from "./languages.js";
 import { SETTINGS_KEY } from "./categories.js";
 import { loadSettings } from "./settingsStore.js";
@@ -31,7 +55,10 @@ import { loadSettings } from "./settingsStore.js";
 // One entry per shared/languages.js code. tests/i18n.test.mjs asserts this map
 // matches the catalog: a table file that exists but is missing here would make
 // t() silently serve English for that whole language.
-const TABLES = { en, ru, uk };
+const TABLES = {
+  ar, bg, cs, da, de, el, en, es, et, fa, fi, fr, hi, it, ja, ko, lt,
+  no, pl, pt_PT, ro, ru, sk, sv, tr, uk, zh_CN
+};
 
 /**
  * Look up a localized string with a selected -> en -> key fallback chain.

@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "Auto Sponsor Skipper",
+    "description": "Extension name shown in Chrome and the Web Store. Brand name — keep identical across all _locales."
+  },
+  "extDescription": {
+    "message": "Automatiškai praleidžia rėmėjų, savireklamos ir priminimų segmentus per „YouTube“ naudodama SponsorBlock bendruomenės duomenis. Jokio sekimo.",
+    "description": "Extension description / store subtitle."
+  }
+}
