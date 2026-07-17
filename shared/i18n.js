@@ -141,26 +141,33 @@ export async function getLanguage() {
 }
 
 /**
- * Invoke `handler(newLang)` only when settings.language actually changes.
- * Compares the change record's oldValue.language to newValue.language (chrome
- * supplies both), so unrelated settings writes (enable / categories / min-length)
- * never fire it. `initialLang` seeds the current language for the rare case where
- * a change record has no oldValue.
+ * Invoke `handler(newLang)` only when the EFFECTIVE UI language actually
+ * changes, so an unrelated settings write (enable / categories / min-length)
+ * never re-localizes the page.
+ *
+ * It re-resolves through loadSettings rather than reading the change record's
+ * newValue.language directly: a user who has never picked a language has no
+ * language field in storage at all (it is resolved from the machine-local hint),
+ * so an absent field means "unchanged", NOT "English" — reading it literally
+ * flipped hint-language users to English the moment they toggled any checkbox.
  * @param {string} initialLang - the caller's current language.
  * @param {(lang: string) => void} handler - called with the new language code.
  * @returns {() => void} an unsubscribe function.
- * @sideEffects Registers a chrome.storage.onChanged listener until unsubscribed.
+ * @sideEffects Registers a chrome.storage.onChanged listener until unsubscribed;
+ *   reads storage when a settings change arrives.
  */
 export function onLanguageChange(initialLang, handler) {
   let currentLang = initialLang || FALLBACK;
   const listener = (changes, area) => {
     if (area !== "sync" || !changes[SETTINGS_KEY]) return;
-    const rec = changes[SETTINGS_KEY];
-    const oldLang = (rec.oldValue && rec.oldValue.language) || currentLang;
-    const newLang = (rec.newValue && rec.newValue.language) || FALLBACK;
-    if (newLang === oldLang) return;
-    currentLang = newLang;
-    handler(newLang);
+    loadSettings()
+      .then((settings) => {
+        const newLang = settings.language;
+        if (newLang === currentLang) return;
+        currentLang = newLang;
+        handler(newLang);
+      })
+      .catch(() => {}); // a failed read just leaves the page in its current language
   };
   chrome.storage.onChanged.addListener(listener);
   return () => chrome.storage.onChanged.removeListener(listener);

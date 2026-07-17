@@ -224,17 +224,55 @@ globalThis.chrome = {
   }
 };
 
+// The listener re-reads storage, so each fire needs a turn to settle.
+const settle = () => new Promise((r) => setTimeout(r, 0));
 const calls = [];
+syncStore["settings"] = { language: "en", enabled: true };
 const unsub = onLanguageChange("en", (l) => calls.push(l));
 ok(typeof listener === "function", "onLanguageChange registered a storage listener");
+
+syncStore["settings"] = { language: "en", enabled: false };
 listener({ settings: { oldValue: { language: "en", enabled: true }, newValue: { language: "en", enabled: false } } }, "sync");
+await settle();
 ok(calls.length === 0, "onLanguageChange: unrelated settings write does not fire");
+
+syncStore["settings"] = { language: "ru" };
 listener({ settings: { oldValue: { language: "en" }, newValue: { language: "ru" } } }, "sync");
+await settle();
 ok(calls.length === 1 && calls[0] === "ru", "onLanguageChange: real change fires once with the new language");
+
+syncStore["settings"] = { language: "ru", enabled: true };
 listener({ settings: { oldValue: { language: "ru" }, newValue: { language: "ru", enabled: true } } }, "sync");
+await settle();
 ok(calls.length === 1, "onLanguageChange: no re-fire on an unrelated write after the switch");
+
 listener({ settings: { oldValue: { language: "ru" }, newValue: { language: "uk" } } }, "local");
+await settle();
 ok(calls.length === 1, "onLanguageChange: a non-sync area is ignored");
+
+// REGRESSION: a user who never picked a language has NO language field stored --
+// their language comes from the machine-local hint. An unrelated write stores an
+// object without that field, and reading it literally used to mean "English",
+// flipping the open popup/options to English while the setting still said uk.
+{
+  delete syncStore["settings"];
+  localStore["languageHint"] = "uk";
+  const hintCalls = [];
+  const stop = onLanguageChange("uk", (l) => hintCalls.push(l));
+  syncStore["settings"] = { enabled: false }; // written by an unrelated toggle: no language field
+  listener({ settings: { oldValue: undefined, newValue: { enabled: false } } }, "sync");
+  await settle();
+  ok(hintCalls.length === 0, "onLanguageChange: a hint-language user is NOT flipped to en by an unrelated write");
+  // ...and picking a real language from that state still fires.
+  syncStore["settings"] = { enabled: false, language: "ru" };
+  listener({ settings: { newValue: { enabled: false, language: "ru" } } }, "sync");
+  await settle();
+  ok(hintCalls.length === 1 && hintCalls[0] === "ru", "onLanguageChange: an explicit choice still fires from a hint state");
+  stop();
+  delete localStore["languageHint"];
+  delete syncStore["settings"];
+}
+
 unsub();
 ok(removed === true, "onLanguageChange: unsubscribe removes the listener");
 
