@@ -65,7 +65,7 @@ export async function loadSettings() {
 
 /**
  * Persist the settings object to chrome.storage.sync.
- * @param {object} settings - complete settings object to store.
+ * @param {object} settings - settings object to store; language may be absent.
  * @returns {Promise<void>}
  * @sideEffects Writes chrome.storage.sync.
  */
@@ -79,16 +79,17 @@ let settingsChain = Promise.resolve();
 
 /**
  * Read the CURRENT settings from storage, apply `mutate` to that fresh copy,
- * and write it back — with calls from this page serialized so they can't
- * interleave. Reading fresh each time means a stale in-memory snapshot in one
+ * and write its persistable fields back — with calls from this page serialized
+ * so they can't interleave. Reading fresh each time means a stale in-memory snapshot in one
  * surface (e.g. a long-lived options tab) can't clobber a change made in
  * another (the popup). Each handler should change only the field it owns inside
  * `mutate`. (Two DIFFERENT pages writing within the same storage round-trip is
  * an inherent chrome.storage race with a sub-millisecond window; not worth a
  * cross-context lock for a settings UI.)
  * @param {(settings: object) => void} mutate
- * @returns {Promise<object>} the written settings.
- * @sideEffects Reads and writes chrome.storage.sync through the serialized chain.
+ * @returns {Promise<object>} the resolved settings after mutation.
+ * @sideEffects Reads chrome.storage.sync and chrome.storage.local, then writes
+ *   chrome.storage.sync through the serialized chain.
  */
 export function updateSettings(mutate) {
   return writeSettings(mutate, false);
@@ -99,8 +100,9 @@ export function updateSettings(mutate) {
  * write of the language field is the one thing that must survive the
  * hint-stripping below — this is the call that turns a hint into a choice.
  * @param {string} code - a shipped language code.
- * @returns {Promise<object>} the written settings.
- * @sideEffects Reads and writes chrome.storage through the serialized chain.
+ * @returns {Promise<object>} the resolved settings after the explicit choice.
+ * @sideEffects Reads chrome.storage.sync and chrome.storage.local, then writes
+ *   chrome.storage.sync through the serialized chain.
  */
 export function chooseLanguage(code) {
   return writeSettings((s) => {
@@ -122,7 +124,8 @@ export function chooseLanguage(code) {
  * @param {(settings: object) => void} mutate
  * @param {boolean} explicitLanguage - true when this write IS a language choice.
  * @returns {Promise<object>} the resolved settings (language included).
- * @sideEffects Reads and writes chrome.storage through the serialized chain.
+ * @sideEffects Reads chrome.storage.sync and chrome.storage.local, then writes
+ *   chrome.storage.sync through the serialized chain.
  */
 function writeSettings(mutate, explicitLanguage) {
   const run = settingsChain.then(async () => {

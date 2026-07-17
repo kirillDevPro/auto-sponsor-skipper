@@ -12,14 +12,14 @@
  *   - It cannot clobber Chrome Sync. A read-then-write of the synced settings
  *     item would race the sync restore that lands seconds after a fresh install
  *     on a second machine: our write, built from the pre-restore snapshot, could
- *     win the conflict and wipe the categories/whitelist/language the user had
- *     set on their other machine. Writing a different key in a different area
+ *     win the conflict and wipe the categories/language the user had set on
+ *     their other machine. Writing a different key in a different area
  *     removes that failure mode instead of narrowing its window.
  *   - Local, not sync, because the hint describes THIS browser's UI locale.
  *     Syncing it would push one machine's browser language onto another's.
  *
- * Stateless, like the rest of the worker: a top-level-registered listener that
- * fires once and writes durable storage, holding nothing in memory.
+ * Stateless, like the rest of the worker: a top-level-registered listener writes
+ * durable storage for qualifying lifecycle events and holds nothing in memory.
  */
 
 import { LANG_HINT_KEY } from "../shared/categories.js";
@@ -29,12 +29,12 @@ import { resolveUILanguage } from "./uiLanguage.js";
  * Record the browser UI locale as the language hint.
  * @param {{reason: string}} details - the onInstalled details.
  * @returns {Promise<void>}
- * @sideEffects Writes LANG_HINT_KEY to chrome.storage.local.
+ * @sideEffects For install/update, reads chrome.i18n and writes LANG_HINT_KEY to
+ *   chrome.storage.local.
  */
 async function recordLanguageHint(details) {
-  // "install" is the first run. "update" refreshes the hint for users who still
-  // have no explicit choice (they predate the language selector) — harmless for
-  // everyone else, since settings.language outranks the hint anyway.
+  // "install" records the initial hint. "update" refreshes the machine-local
+  // hint, which affects only users without an explicit settings.language choice.
   // chrome_update / shared_module_update are not our event.
   if (details.reason !== "install" && details.reason !== "update") return;
 

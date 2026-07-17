@@ -4,8 +4,8 @@
  * costs one small file and never pulls in a message table.
  *
  * That isolation is the point. The service worker matches the browser UI locale
- * against this catalog on first run (background/uiLanguage.js); importing the
- * catalog from shared/i18n.js instead would drag every message table — one per
+ * against this catalog on install and update (background/uiLanguage.js);
+ * importing the catalog from shared/i18n.js instead would drag every message table — one per
  * shipped language — into every service-worker cold start, for a list of codes.
  *
  * Codes are the _locales directory names (Chrome's own spelling: underscores,

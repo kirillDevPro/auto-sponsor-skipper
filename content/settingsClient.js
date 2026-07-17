@@ -1,8 +1,9 @@
 /**
  * content/settingsClient.js — reads user settings from chrome.storage, merges
- * them over defaults, caches the merged value in memory, and live-updates on
- * chrome.storage.onChanged so a toggle in the popup/options takes effect
- * without a page reload. The whitelist is read on demand (it changes rarely).
+ * them over defaults and the machine-local language hint, caches the merged
+ * value in memory, and refreshes the cache when synced settings change so a
+ * popup/options toggle takes effect without a page reload. The whitelist is
+ * read on demand.
  */
 
 ;(() => {
@@ -97,7 +98,7 @@
    * `language` and `showSkipNotice` are read live by their UI paths, so toggling
    * either must not trigger a reapply that resets the skip cooldown and could
    * re-skip a segment the user scrubbed back into. Compares against the
-   * previously cached settings, not the change record.
+   * existing cached settings, not the change record.
    * @param {object|null} prev - previous cached settings.
    * @param {object} next - newly merged settings.
    * @returns {boolean} true when skip logic or marker rendering should reapply.
@@ -114,6 +115,13 @@
     return false;
   }
 
+  /**
+   * Refresh cached settings or notify the current channel after storage changes.
+   * @param {object} changes - chrome.storage change records keyed by storage key.
+   * @param {string} area - the storage area that emitted the change.
+   * @returns {void}
+   * @sideEffects Updates the cache and may invoke content callbacks.
+   */
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area === "sync" && changes[NS.STORAGE.SETTINGS_KEY]) {
       const prev = cache;

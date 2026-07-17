@@ -1,7 +1,8 @@
 /**
  * shared/i18n.js - the in-page localization runtime for the popup and options
- * pages (the ES-module trees). The UI uses settings.language, stored in sync, so
- * the user can choose a language independently of the browser UI locale.
+ * pages (the ES-module trees). The effective language comes from an explicit
+ * synced settings.language choice, then the machine-local browser-locale hint,
+ * then English. An explicit choice is independent of the browser UI locale.
  *
  * The message tables are STATIC ES imports (shared/messages/<lang>.js): they
  * load in the privileged extension pages with no web_accessible_resources and no
@@ -86,7 +87,8 @@ export function t(lang, key) {
  * @param {ParentNode} root - parent node to localize; defaults to document.
  * @param {string} lang - selected language code.
  * @returns {void}
- * @sideEffects Updates matching elements' textContent, title, and placeholder.
+ * @sideEffects Updates the page language and matching elements' textContent,
+ *   title, and placeholder.
  */
 export function localizePage(root, lang) {
   const scope = root || document;
@@ -131,9 +133,9 @@ export function formatDuration(totalSeconds, lang) {
 }
 
 /**
- * @returns {Promise<string>} the user's selected UI language from settings.sync,
- *   defaulting to "en" (mergeSettings backfills it for existing users).
- * @sideEffects Reads chrome.storage.sync through loadSettings().
+ * Return the effective UI language.
+ * @returns {Promise<string>} the explicit choice, browser-locale hint, or fallback.
+ * @sideEffects Reads chrome.storage.sync and chrome.storage.local through loadSettings().
  */
 export async function getLanguage() {
   const settings = await loadSettings();
@@ -167,6 +169,7 @@ export function onLanguageChange(initialLang, handler) {
    * Apply a resolved language, if it is actually a change.
    * @param {string} lang - the effective language code.
    * @returns {void}
+   * @sideEffects Invokes the caller's handler when the language changes.
    */
   const applyLanguage = (lang) => {
     if (lang === currentLang) return;
@@ -174,6 +177,13 @@ export function onLanguageChange(initialLang, handler) {
     handler(lang);
   };
 
+  /**
+   * Resolve a sync settings change without allowing an older hint read to win.
+   * @param {object} changes - chrome.storage change records keyed by storage key.
+   * @param {string} area - the storage area that emitted the change.
+   * @returns {void}
+   * @sideEffects May read storage and invoke the caller's handler.
+   */
   const listener = (changes, area) => {
     if (area !== "sync" || !changes[SETTINGS_KEY]) return;
     const stored = changes[SETTINGS_KEY].newValue;

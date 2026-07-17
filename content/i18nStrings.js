@@ -8,6 +8,8 @@
  * this is a DELIBERATE duplicate of the cat_* messages in shared/messages/<lang>.js
  * — keep the two byte-consistent, exactly like NS.DEFAULTS / NS.CATEGORY_COLORS.
  * tests/i18n.test.mjs asserts NS.CAT_NAMES[lang][id] === shared/messages[lang]["cat_"+id].
+ * The 27-language tables are derived from shared/messages/* by a throwaway
+ * script, never hand-transcribed.
  *
  * Loaded after content/settingsClient.js (so NS.settings exists) and before the
  * modules that use it. catName() reads the language at CALL time, so a live

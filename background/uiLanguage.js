@@ -1,8 +1,8 @@
 /**
  * background/uiLanguage.js — maps a browser UI locale onto a shipped UI language
- * code. Used once, on first run, to pick a starting language instead of showing
- * English to everyone (background/firstRunLanguage.js). Pure: no chrome.* calls,
- * so it is headlessly testable.
+ * code. Used on install and update to record a machine-local language hint
+ * (background/firstRunLanguage.js). Pure: no chrome.* calls, so it is headlessly
+ * testable.
  *
  * Chrome reports the UI locale as a BCP-47 tag with hyphens ("pt-BR",
  * "zh-Hans-CN", "nb-NO"), while our codes are _locales directory names with
