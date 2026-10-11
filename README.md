@@ -6,6 +6,7 @@
   <a href="https://chromewebstore.google.com/detail/auto-sponsor-skipper/nlneheilnhkcgepoepjjlcfedngaapce"><img src="https://img.shields.io/chrome-web-store/v/nlneheilnhkcgepoepjjlcfedngaapce?label=Chrome%20Web%20Store&color=4285F4&logo=googlechrome&logoColor=white" alt="Chrome Web Store"></a>
   <a href="https://chromewebstore.google.com/detail/auto-sponsor-skipper/nlneheilnhkcgepoepjjlcfedngaapce"><img src="https://img.shields.io/chrome-web-store/users/nlneheilnhkcgepoepjjlcfedngaapce?label=users&color=34A853&logo=googlechrome&logoColor=white" alt="Chrome Web Store users"></a>
   <a href="https://github.com/kirillDevPro/auto-sponsor-skipper/actions/workflows/ci.yml"><img src="https://github.com/kirillDevPro/auto-sponsor-skipper/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="#status"><img src="https://img.shields.io/badge/verified%20working-2026--10--11-16A34A" alt="Verified working: 2026-10-11"></a>
   <img src="https://img.shields.io/badge/Manifest-V3-4285F4" alt="Manifest V3">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-source--available%20%C2%B7%20personal%20use-2563EB" alt="License: source-available, personal use only"></a>
   <img src="https://img.shields.io/badge/tracking-none-16A34A" alt="No tracking">
@@ -21,6 +22,13 @@
 </p>
 
 Auto Sponsor Skipper is a Chrome (Manifest V3) extension that fast-forwards the YouTube HTML5 player past the parts of a video you didn't come to watch — sponsor reads, self-promotion, and "like &amp; subscribe" reminders — using crowd-sourced timestamps from the [SponsorBlock](https://sponsor.ajay.app) community database. It runs only on YouTube watch pages, sends no personal data anywhere, and does no tracking.
+
+## Status
+Maintained and working as of the last check. A live check runs every week: the extension is loaded into a clean browser, opens a YouTube video that has SponsorBlock segments and confirms the player skips past a sponsor segment. Rare commits mean the extension is stable, not abandoned.
+
+Verified working: 2026-10-11
+
+Install it from the [Chrome Web Store](https://chromewebstore.google.com/detail/auto-sponsor-skipper/nlneheilnhkcgepoepjjlcfedngaapce).
 
 ## Features
 - **Automatic skipping** — no button to press; segments are skipped as you watch.
